@@ -16,8 +16,17 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./cmd/server
+# Get build args
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIME=unknown
+ARG VERSION=1.0.0
+
+# Build the application with version info
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
+    -ldflags "-X 'github.com/toof-jp/shisha-log/backend/internal/version.GitCommit=${GIT_COMMIT}' \
+    -X 'github.com/toof-jp/shisha-log/backend/internal/version.BuildTime=${BUILD_TIME}' \
+    -X 'github.com/toof-jp/shisha-log/backend/internal/version.Version=${VERSION}'" \
+    -o server ./cmd/server
 
 # Final stage
 FROM alpine:latest

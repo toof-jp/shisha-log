@@ -13,6 +13,7 @@ import (
 	"github.com/toof-jp/shisha-log/backend/internal/config"
 	"github.com/toof-jp/shisha-log/backend/internal/repository"
 	"github.com/toof-jp/shisha-log/backend/internal/service"
+	"github.com/toof-jp/shisha-log/backend/internal/version"
 )
 
 func main() {
@@ -74,11 +75,24 @@ func main() {
 
 	// Health check
 	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(200, map[string]string{"status": "ok"})
+		response := map[string]interface{}{
+			"status": "ok",
+			"version": version.Info(),
+		}
+		return c.JSON(200, response)
 	})
 
 	// API routes
 	apiGroup := e.Group("/api/v1")
+	
+	// API health check
+	apiGroup.GET("/health", func(c echo.Context) error {
+		response := map[string]interface{}{
+			"status": "ok",
+			"version": version.Info(),
+		}
+		return c.JSON(200, response)
+	})
 
 	// Auth routes (public)
 	authGroup := apiGroup.Group("/auth")

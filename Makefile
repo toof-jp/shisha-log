@@ -60,9 +60,19 @@ help:
 	@echo "  make list-acm-certs     - List all ACM certificates in us-east-1"
 	@echo "  make cert-validation-status - Check certificate validation status"
 
+# Version info
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+VERSION := 1.0.0
+
+# Build flags
+LDFLAGS := -X 'github.com/toof-jp/shisha-log/backend/internal/version.GitCommit=$(GIT_COMMIT)' \
+           -X 'github.com/toof-jp/shisha-log/backend/internal/version.BuildTime=$(BUILD_TIME)' \
+           -X 'github.com/toof-jp/shisha-log/backend/internal/version.Version=$(VERSION)'
+
 # Backend commands
 backend-build:
-	cd backend && go build -o bin/server cmd/server/main.go
+	cd backend && go build -ldflags "$(LDFLAGS)" -o bin/server cmd/server/main.go
 
 backend-run:
 	cd backend && go run cmd/server/main.go
@@ -128,7 +138,11 @@ deploy-all: deploy-frontend deploy-backend
 
 # Docker commands
 docker-build:
-	cd backend && docker build -t shisha-log .
+	cd backend && docker build \
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) \
+		--build-arg VERSION=$(VERSION) \
+		-t shisha-log .
 
 docker-run:
 	docker run --env-file .env -p 8080:8080 shisha-log

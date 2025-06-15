@@ -117,6 +117,9 @@ func main() {
 	protected.GET("/sessions/:id", sessionHandler.GetSession)
 	protected.PUT("/sessions/:id", sessionHandler.UpdateSession)
 	protected.DELETE("/sessions/:id", sessionHandler.DeleteSession)
+	
+	// Flavor statistics route
+	protected.GET("/flavors/stats", sessionHandler.GetFlavorStats)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

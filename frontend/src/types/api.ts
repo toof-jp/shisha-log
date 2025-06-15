@@ -26,7 +26,18 @@ export interface SessionFlavor {
   session_id?: string;
   flavor_name?: string;
   brand?: string;
+  flavor_order?: number;
   created_at?: string;
+}
+
+export interface FlavorCount {
+  flavor_name: string;
+  count: number;
+}
+
+export interface FlavorStats {
+  main_flavors: FlavorCount[];
+  all_flavors: FlavorCount[];
 }
 
 export interface ShishaSession {

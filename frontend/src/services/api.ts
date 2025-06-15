@@ -7,7 +7,8 @@ import type {
   ShishaSession,
   CreateSessionRequest,
   SessionsResponse,
-  ErrorResponse
+  ErrorResponse,
+  FlavorStats
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -129,6 +130,12 @@ class ApiClient {
 
   async deleteSession(id: string): Promise<void> {
     await this.api.delete(`/sessions/${id}`);
+  }
+
+  // Flavor endpoints
+  async getFlavorStats(): Promise<FlavorStats> {
+    const response = await this.api.get<FlavorStats>('/flavors/stats');
+    return response.data;
   }
 }
 

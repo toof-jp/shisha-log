@@ -1,6 +1,7 @@
 -- Unified Shisha Log Database Schema
 -- This file consolidates all previous migrations into a single schema
--- Last updated: 2025-06-15
+-- Last updated: 2025-06-16
+-- Added: flavor_order column to session_flavors table
 
 -- Create users table (custom authentication with user_id)
 CREATE TABLE IF NOT EXISTS public.users (
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS public.session_flavors (
     session_id UUID NOT NULL REFERENCES public.shisha_sessions(id) ON DELETE CASCADE,
     flavor_name TEXT, -- nullable (optional)
     brand TEXT,
+    flavor_order INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

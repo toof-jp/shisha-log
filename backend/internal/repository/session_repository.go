@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
+	"sort"
 
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
@@ -20,17 +22,31 @@ func NewSessionRepository(client *supabase.Client) *SessionRepository {
 
 func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSession, flavors []models.CreateFlavorRequest) (*models.SessionWithFlavors, error) {
 	// Start transaction by creating session first
-	var createdSessions []models.ShishaSession
-	session.ID = uuid.New().String()
+	sessionID := uuid.New().String()
+	session.ID = sessionID
+
+	// Create insert struct without timestamps
+	insertSession := models.SessionInsert{
+		ID:           sessionID,
+		UserID:       session.UserID,
+		CreatedBy:    session.CreatedBy,
+		SessionDate:  session.SessionDate,
+		StoreName:    session.StoreName,
+		Notes:        session.Notes,
+		OrderDetails: session.OrderDetails,
+		MixName:      session.MixName,
+		Creator:      session.Creator,
+	}
 
 	data, _, err := r.client.From("shisha_sessions").
-		Insert(session, false, "", "", "").
+		Insert(insertSession, false, "", "", "").
 		Execute()
 
 	if err != nil {
 		return nil, err
 	}
 
+	var createdSessions []models.ShishaSession
 	err = json.Unmarshal(data, &createdSessions)
 	if err != nil {
 		return nil, err
@@ -43,20 +59,21 @@ func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSe
 	createdSession := createdSessions[0]
 
 	// Create flavors
-	var sessionFlavors []models.SessionFlavor
-	for _, flavor := range flavors {
-		sessionFlavor := models.SessionFlavor{
-			ID:         uuid.New().String(),
-			SessionID:  createdSession.ID,
-			FlavorName: flavor.FlavorName,
-			Brand:      flavor.Brand,
+	var flavorInserts []models.FlavorInsert
+	for i, flavor := range flavors {
+		flavorInsert := models.FlavorInsert{
+			ID:          uuid.New().String(),
+			SessionID:   createdSession.ID,
+			FlavorName:  flavor.FlavorName,
+			Brand:       flavor.Brand,
+			FlavorOrder: i + 1, // Order starts from 1
 		}
-		sessionFlavors = append(sessionFlavors, sessionFlavor)
+		flavorInserts = append(flavorInserts, flavorInsert)
 	}
 
-	if len(sessionFlavors) > 0 {
+	if len(flavorInserts) > 0 {
 		_, _, err = r.client.From("session_flavors").
-			Insert(sessionFlavors, false, "", "", "").
+			Insert(flavorInserts, false, "", "", "").
 			Execute()
 
 		if err != nil {
@@ -64,18 +81,22 @@ func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSe
 			return nil, err
 		}
 	}
-
-	return &models.SessionWithFlavors{
-		ShishaSession: createdSession,
-		Flavors:       sessionFlavors,
-	}, nil
+	
+	// Fetch the session again to get proper timestamps
+	// This is a workaround for Supabase Go client timestamp issue
+	freshSession, err := r.GetByID(ctx, createdSession.ID)
+	if err != nil {
+		return nil, err
+	}
+	
+	return freshSession, nil
 }
 
 func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.SessionWithFlavors, error) {
 	var sessions []models.ShishaSession
 
 	data, _, err := r.client.From("shisha_sessions").
-		Select("*", "exact", false).
+		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,created_at,updated_at", "exact", false).
 		Eq("id", id).
 		Execute()
 
@@ -83,6 +104,18 @@ func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.Ses
 		return nil, err
 	}
 
+	// Debug: Print raw JSON data
+	// TODO: Remove this debug log in production
+	if len(data) > 0 {
+		var rawData []map[string]interface{}
+		if err := json.Unmarshal(data, &rawData); err == nil && len(rawData) > 0 {
+			// Log only the first session to check timestamp format
+			if _, ok := rawData[0]["created_at"]; ok {
+				// fmt.Printf("DEBUG: created_at from Supabase: %v (type: %T)\n", ts, ts)
+			}
+		}
+	}
+	
 	err = json.Unmarshal(data, &sessions)
 	if err != nil {
 		return nil, err
@@ -97,8 +130,9 @@ func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.Ses
 	// Get flavors
 	var flavors []models.SessionFlavor
 	data, _, err = r.client.From("session_flavors").
-		Select("*", "exact", false).
+		Select("id,session_id,flavor_name,brand,flavor_order,created_at", "exact", false).
 		Eq("session_id", id).
+		Order("flavor_order", nil).
 		Execute()
 
 	if err != nil {
@@ -120,20 +154,20 @@ func (r *SessionRepository) GetByUserID(ctx context.Context, userID string, limi
 	var sessions []models.ShishaSession
 
 	query := r.client.From("shisha_sessions").
-		Select("*", "exact", false).
+		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,created_at,updated_at", "exact", false).
 		Eq("user_id", userID).
 		Order("session_date", nil) // nil uses default options (descending)
 
 	if limit > 0 {
 		query = query.Limit(limit, "")
-	}
-
-	if offset > 0 {
-		query = query.Range(offset, offset+limit-1, "")
+		if offset > 0 {
+			query = query.Range(offset, offset+limit-1, "")
+		}
 	}
 
 	data, _, err := query.Execute()
 	if err != nil {
+		log.Printf("Error executing session query: %v", err)
 		return nil, err
 	}
 
@@ -151,8 +185,9 @@ func (r *SessionRepository) GetByUserID(ctx context.Context, userID string, limi
 	var allFlavors []models.SessionFlavor
 	if len(sessionIDs) > 0 {
 		data, _, err := r.client.From("session_flavors").
-			Select("*", "exact", false).
+			Select("id,session_id,flavor_name,brand,flavor_order,created_at", "exact", false).
 			In("session_id", sessionIDs).
+			Order("flavor_order", nil).
 			Execute()
 
 		if err != nil {
@@ -252,20 +287,21 @@ func (r *SessionRepository) Update(ctx context.Context, id string, update *model
 		}
 
 		// Insert new flavors
-		var sessionFlavors []models.SessionFlavor
-		for _, flavor := range *update.Flavors {
-			sessionFlavor := models.SessionFlavor{
-				ID:         uuid.New().String(),
-				SessionID:  id,
-				FlavorName: flavor.FlavorName,
-				Brand:      flavor.Brand,
+		var flavorInserts []models.FlavorInsert
+		for i, flavor := range *update.Flavors {
+			flavorInsert := models.FlavorInsert{
+				ID:          uuid.New().String(),
+				SessionID:   id,
+				FlavorName:  flavor.FlavorName,
+				Brand:       flavor.Brand,
+				FlavorOrder: i + 1, // Order starts from 1
 			}
-			sessionFlavors = append(sessionFlavors, sessionFlavor)
+			flavorInserts = append(flavorInserts, flavorInsert)
 		}
 
-		if len(sessionFlavors) > 0 {
+		if len(flavorInserts) > 0 {
 			_, _, err = r.client.From("session_flavors").
-				Insert(sessionFlavors, false, "", "", "").
+				Insert(flavorInserts, false, "", "", "").
 				Execute()
 			
 			if err != nil {
@@ -316,4 +352,69 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 		Execute()
 
 	return err
+}
+
+func (r *SessionRepository) GetFlavorStats(ctx context.Context, userID string) (*models.FlavorStats, error) {
+	// Get all sessions for the user - use a large limit instead of 0
+	sessions, err := r.GetByUserID(ctx, userID, 10000, 0) // Get all sessions up to 10000
+	if err != nil {
+		return nil, err
+	}
+	
+	// Count main flavors (first flavor of each session)
+	mainFlavorMap := make(map[string]int)
+	allFlavorMap := make(map[string]int)
+	
+	for _, session := range sessions {
+		for i, flavor := range session.Flavors {
+			if flavor.FlavorName != nil && *flavor.FlavorName != "" {
+				// Count all flavors
+				allFlavorMap[*flavor.FlavorName]++
+				
+				// Count only main flavors (first one)
+				if i == 0 {
+					mainFlavorMap[*flavor.FlavorName]++
+				}
+			}
+		}
+	}
+	
+	// Convert maps to sorted slices
+	mainFlavors := make([]models.FlavorCount, 0, len(mainFlavorMap))
+	for name, count := range mainFlavorMap {
+		mainFlavors = append(mainFlavors, models.FlavorCount{
+			FlavorName: name,
+			Count:      count,
+		})
+	}
+	
+	allFlavors := make([]models.FlavorCount, 0, len(allFlavorMap))
+	for name, count := range allFlavorMap {
+		allFlavors = append(allFlavors, models.FlavorCount{
+			FlavorName: name,
+			Count:      count,
+		})
+	}
+	
+	// Sort by count descending
+	sort.Slice(mainFlavors, func(i, j int) bool {
+		return mainFlavors[i].Count > mainFlavors[j].Count
+	})
+	
+	sort.Slice(allFlavors, func(i, j int) bool {
+		return allFlavors[i].Count > allFlavors[j].Count
+	})
+	
+	// Limit to top 10
+	if len(mainFlavors) > 10 {
+		mainFlavors = mainFlavors[:10]
+	}
+	if len(allFlavors) > 10 {
+		allFlavors = allFlavors[:10]
+	}
+	
+	return &models.FlavorStats{
+		MainFlavors: mainFlavors,
+		AllFlavors:  allFlavors,
+	}, nil
 }

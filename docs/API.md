@@ -224,18 +224,21 @@ Note: The `flavors` array itself is optional. If provided, both `flavor_name` an
       "session_id": "session-uuid",
       "flavor_name": "Blueberry",
       "brand": "Al Fakher",
+      "flavor_order": 1,
       "created_at": "2024-01-01T00:00:00Z"
     },
     {
       "id": "flavor-uuid",
       "session_id": "session-uuid",
       "flavor_name": "Mint",
+      "flavor_order": 2,
       "created_at": "2024-01-01T00:00:00Z"
     },
     {
       "id": "flavor-uuid",
       "session_id": "session-uuid",
       "flavor_name": "Ice",
+      "flavor_order": 3,
       "created_at": "2024-01-01T00:00:00Z"
     }
   ],
@@ -357,6 +360,55 @@ Deletes a specific session.
   "message": "Session deleted successfully"
 }
 ```
+
+### Flavor Endpoints (Protected)
+
+#### Get Flavor Statistics
+```
+GET /api/v1/flavors/stats
+```
+
+Gets flavor usage statistics for the authenticated user.
+
+**Response**
+```json
+{
+  "main_flavors": [
+    {
+      "flavor_name": "Blueberry",
+      "count": 15
+    },
+    {
+      "flavor_name": "Mint",
+      "count": 12
+    },
+    {
+      "flavor_name": "Grape",
+      "count": 8
+    }
+  ],
+  "all_flavors": [
+    {
+      "flavor_name": "Mint",
+      "count": 25
+    },
+    {
+      "flavor_name": "Blueberry",
+      "count": 20
+    },
+    {
+      "flavor_name": "Ice",
+      "count": 18
+    }
+  ]
+}
+```
+
+**Notes:**
+- `main_flavors`: Statistics for first flavors in sessions (flavor_order = 1)
+- `all_flavors`: Statistics for all flavors regardless of order
+- Results are sorted by count in descending order
+- Limited to top 10 flavors for each category
 
 ## Error Responses
 

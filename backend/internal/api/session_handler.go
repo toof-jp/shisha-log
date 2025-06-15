@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -84,6 +85,7 @@ func (h *SessionHandler) GetUserSessions(c echo.Context) error {
 
 	sessions, err := h.repo.GetByUserID(c.Request().Context(), userID, limit, offset)
 	if err != nil {
+		log.Printf("GetUserSessions error for user %s: %v", userID, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get sessions"})
 	}
 
@@ -164,4 +166,16 @@ func (h *SessionHandler) DeleteSession(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Session deleted successfully"})
+}
+
+func (h *SessionHandler) GetFlavorStats(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	stats, err := h.repo.GetFlavorStats(c.Request().Context(), userID)
+	if err != nil {
+		log.Printf("GetFlavorStats error for user %s: %v", userID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get flavor statistics"})
+	}
+
+	return c.JSON(http.StatusOK, stats)
 }

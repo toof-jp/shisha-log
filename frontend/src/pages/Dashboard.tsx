@@ -2,12 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
-import type { ShishaSession } from '../types/api';
+import type { ShishaSession, FlavorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
+import { FlavorChart } from '../components/FlavorChart';
+import { FlavorRanking } from '../components/FlavorRanking';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [recentSessions, setRecentSessions] = useState<ShishaSession[]>([]);
+  const [flavorStats, setFlavorStats] = useState<FlavorStats | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
@@ -18,11 +22,19 @@ export const Dashboard: React.FC = () => {
   const fetchRecentSessions = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getSessions(5, 0);
-      console.log('Dashboard sessions response:', response);
-      setRecentSessions(response.sessions || []);
+      
+      // Fetch recent sessions and flavor stats in parallel
+      const [sessionsResponse, flavorStatsData] = await Promise.all([
+        apiClient.getSessions(5, 0),
+        apiClient.getFlavorStats()
+      ]);
+      
+      console.log('Dashboard sessions response:', sessionsResponse);
+      setRecentSessions(sessionsResponse.sessions || []);
+      setTotalCount(sessionsResponse.total || 0);
+      setFlavorStats(flavorStatsData);
     } catch (err) {
-      setError('セッションの読み込みに失敗しました');
+      setError('データの読み込みに失敗しました');
       console.error('Dashboard error:', err);
       setRecentSessions([]);
     } finally {
@@ -48,7 +60,7 @@ export const Dashboard: React.FC = () => {
               総セッション数
             </dt>
             <dd className="mt-1 text-2xl sm:text-3xl font-semibold text-gray-900">
-              {recentSessions?.length || 0}
+              {totalCount}
             </dd>
           </div>
         </div>
@@ -146,6 +158,47 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Flavor Statistics Section */}
+      {flavorStats && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
+          
+          {/* Main Flavors */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FlavorRanking 
+                data={flavorStats.main_flavors} 
+                title="TOP 10 メインフレーバー" 
+              />
+              <div className="bg-white shadow rounded-lg p-6">
+                <FlavorChart 
+                  data={flavorStats.main_flavors.slice(0, 5)} 
+                  title="メインフレーバー構成比" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* All Flavors */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FlavorRanking 
+                data={flavorStats.all_flavors} 
+                title="TOP 10 全フレーバー" 
+              />
+              <div className="bg-white shadow rounded-lg p-6">
+                <FlavorChart 
+                  data={flavorStats.all_flavors.slice(0, 5)} 
+                  title="全フレーバー構成比" 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

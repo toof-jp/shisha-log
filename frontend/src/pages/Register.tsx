@@ -1,50 +1,55 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useAuth } from '../contexts/AuthContext';
+import type { AxiosError } from 'axios';
+import type { ErrorResponse } from '../types/api';
 
-const Register = () => {
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+const registerSchema = z.object({
+  user_id: z
+    .string()
+    .min(3, 'User ID must be at least 3 characters')
+    .max(30, 'User ID must be at most 30 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
 
-  const validatePassword = (password: string) => {
-    const minLength = password.length >= 8;
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    
-    return minLength && hasUpper && hasLower && hasNumber;
-  };
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-  const validateUserId = (userId: string) => {
-    return userId.length >= 3 && userId.length <= 30;
-  };
+export const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const { register: registerUser } = useAuth();
+  const [error, setError] = useState<string>('');
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!validateUserId(userId)) {
-      setError('ユーザーIDは3文字以上30文字以下で入力してください');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setError('パスワードは8文字以上で、大文字・小文字・数字を含む必要があります');
-      return;
-    }
-
-    setIsLoading(true);
-
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      await register(userId, password, displayName);
-    } catch (err: any) {
-      setError(err.response?.data?.error || '登録に失敗しました');
-    } finally {
-      setIsLoading(false);
+      setError('');
+      await registerUser({
+        user_id: data.user_id,
+        password: data.password,
+      });
+      navigate('/dashboard');
+    } catch (err) {
+      const error = err as AxiosError<ErrorResponse>;
+      setError(error.response?.data?.error || 'Failed to register');
     }
   };
 
@@ -53,79 +58,82 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            新規登録
+            Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            または{' '}
+            Or{' '}
             <Link
               to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              ログイン
+              sign in to your existing account
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-800">{error}</div>
             </div>
           )}
           <div className="space-y-4">
             <div>
-              <label htmlFor="userId" className="block text-sm font-medium text-gray-700">
-                ユーザーID
+              <label htmlFor="user_id" className="block text-sm font-medium text-gray-700">
+                User ID
               </label>
               <input
-                id="userId"
-                name="userId"
+                {...register('user_id')}
                 type="text"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="3-30文字"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
+                autoComplete="username"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Choose a unique user ID"
               />
-            </div>
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-                表示名
-              </label>
-              <input
-                id="displayName"
-                name="displayName"
-                type="text"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="表示名"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
+              {errors.user_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.user_id.message}</p>
+              )}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                パスワード
+                Password
               </label>
               <input
-                id="password"
-                name="password"
+                {...register('password')}
                 type="password"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="8文字以上、大文字・小文字・数字を含む"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Create a strong password"
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Must be at least 8 characters with uppercase, lowercase, and numbers
+              </p>
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <input
+                {...register('confirmPassword')}
+                type="password"
+                autoComplete="new-password"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm your password"
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+              )}
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              disabled={isSubmitting}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? '登録中...' : '登録'}
+              {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>
         </form>
@@ -133,5 +141,3 @@ const Register = () => {
     </div>
   );
 };
-
-export default Register;

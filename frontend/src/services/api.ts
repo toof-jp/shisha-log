@@ -1,53 +1,55 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import {
+import axios from 'axios';
+import type { AxiosInstance, AxiosError } from 'axios';
+import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
-  Profile,
-  CreateProfileRequest,
-  UpdateProfileRequest,
-  Session,
+  ShishaSession,
   CreateSessionRequest,
-  UpdateSessionRequest,
   SessionsResponse,
-  ChangePasswordRequest,
-  RequestPasswordResetRequest,
-  ResetPasswordRequest,
-} from '@/types/api';
+  ErrorResponse
+} from '../types/api';
 
-class ApiService {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+
+class ApiClient {
   private api: AxiosInstance;
+  private token: string | null = null;
 
   constructor() {
-    // 環境変数から API ベース URL を取得、フォールバックは開発/本番で分岐
-    const isDev = import.meta.env.DEV;
-    const defaultBaseURL = isDev 
-      ? 'https://localhost:8080/api/v1' 
-      : 'https://api.shisha.toof.jp/api/v1';
-    
-    const baseURL = import.meta.env.VITE_API_BASE_URL || defaultBaseURL;
-    
     this.api = axios.create({
-      baseURL,
+      baseURL: API_BASE_URL,
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Type': 'application/json',
       },
     });
 
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
+    // Load token from localStorage on initialization
+    const storedToken = localStorage.getItem('auth_token');
+    if (storedToken) {
+      this.setToken(storedToken);
+    }
 
+    // Request interceptor to add token to headers
+    this.api.interceptors.request.use(
+      (config) => {
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Response interceptor to handle errors
     this.api.interceptors.response.use(
       (response) => response,
-      (error) => {
+      (error: AxiosError<ErrorResponse>) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          // Clear token and redirect to login
+          this.clearToken();
           window.location.href = '/login';
         }
         return Promise.reject(error);
@@ -55,74 +57,79 @@ class ApiService {
     );
   }
 
+  setToken(token: string) {
+    this.token = token;
+    localStorage.setItem('auth_token', token);
+  }
+
+  clearToken() {
+    this.token = null;
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+  }
+
+  getToken(): string | null {
+    return this.token;
+  }
+
+  // Auth endpoints
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/register', data);
+    const response = await this.api.post<AuthResponse>('/auth/register', data);
+    this.setToken(response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/login', data);
+    const response = await this.api.post<AuthResponse>('/auth/login', data);
+    this.setToken(response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   }
 
-  async changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {
-    const response = await this.api.post('/auth/change-password', data);
+  async logout() {
+    this.clearToken();
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.api.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  }
+
+  // Session endpoints
+  async getSessions(limit = 20, offset = 0): Promise<SessionsResponse> {
+    const response = await this.api.get<SessionsResponse>('/sessions', {
+      params: { limit, offset },
+    });
+    // Ensure response has the expected structure
+    return {
+      sessions: response.data?.sessions || [],
+      total: response.data?.total || 0,
+      limit: response.data?.limit || limit,
+      offset: response.data?.offset || offset,
+    };
+  }
+
+  async getSession(id: string): Promise<ShishaSession> {
+    const response = await this.api.get<ShishaSession>(`/sessions/${id}`);
     return response.data;
   }
 
-  async requestPasswordReset(data: RequestPasswordResetRequest): Promise<{ message: string; reset_token?: string }> {
-    const response = await this.api.post('/auth/request-password-reset', data);
+  async createSession(data: CreateSessionRequest): Promise<ShishaSession> {
+    const response = await this.api.post<ShishaSession>('/sessions', data);
     return response.data;
   }
 
-  async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
-    const response = await this.api.post('/auth/reset-password', data);
+  async updateSession(id: string, data: Partial<CreateSessionRequest>): Promise<ShishaSession> {
+    const response = await this.api.put<ShishaSession>(`/sessions/${id}`, data);
     return response.data;
   }
 
-  async getProfile(): Promise<Profile> {
-    const response: AxiosResponse<Profile> = await this.api.get('/profile');
-    return response.data;
-  }
-
-  async createProfile(data: CreateProfileRequest): Promise<Profile> {
-    const response: AxiosResponse<Profile> = await this.api.post('/profile', data);
-    return response.data;
-  }
-
-  async updateProfile(data: UpdateProfileRequest): Promise<Profile> {
-    const response: AxiosResponse<Profile> = await this.api.put('/profile', data);
-    return response.data;
-  }
-
-  async getSessions(limit?: number, offset?: number): Promise<SessionsResponse> {
-    const params = new URLSearchParams();
-    if (limit) params.append('limit', limit.toString());
-    if (offset) params.append('offset', offset.toString());
-    
-    const response: AxiosResponse<SessionsResponse> = await this.api.get(`/sessions?${params}`);
-    return response.data;
-  }
-
-  async getSession(id: string): Promise<Session> {
-    const response: AxiosResponse<Session> = await this.api.get(`/sessions/${id}`);
-    return response.data;
-  }
-
-  async createSession(data: CreateSessionRequest): Promise<Session> {
-    const response: AxiosResponse<Session> = await this.api.post('/sessions', data);
-    return response.data;
-  }
-
-  async updateSession(id: string, data: UpdateSessionRequest): Promise<Session> {
-    const response: AxiosResponse<Session> = await this.api.put(`/sessions/${id}`, data);
-    return response.data;
-  }
-
-  async deleteSession(id: string): Promise<{ message: string }> {
-    const response = await this.api.delete(`/sessions/${id}`);
-    return response.data;
+  async deleteSession(id: string): Promise<void> {
+    await this.api.delete(`/sessions/${id}`);
   }
 }
 
-export const apiService = new ApiService();
+export const apiClient = new ApiClient();

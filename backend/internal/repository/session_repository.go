@@ -45,10 +45,16 @@ func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSe
 	// Create flavors
 	var sessionFlavors []models.SessionFlavor
 	for _, flavor := range flavors {
+		// Default empty flavor name if not provided
+		flavorName := ""
+		if flavor.FlavorName != nil {
+			flavorName = *flavor.FlavorName
+		}
+		
 		sessionFlavor := models.SessionFlavor{
 			ID:         uuid.New().String(),
 			SessionID:  createdSession.ID,
-			FlavorName: flavor.FlavorName,
+			FlavorName: flavorName,
 			Brand:      flavor.Brand,
 		}
 		sessionFlavors = append(sessionFlavors, sessionFlavor)

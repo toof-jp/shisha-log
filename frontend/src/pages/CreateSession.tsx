@@ -1,252 +1,208 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { apiService } from '@/services/api';
-import { CreateSessionRequest } from '@/types/api';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { apiClient } from '../services/api';
+import type { AxiosError } from 'axios';
+import type { ErrorResponse } from '../types/api';
 
-interface FlavorInput {
-  flavor_name: string;
-  brand: string;
-}
+const sessionSchema = z.object({
+  session_date: z.string().min(1, 'Date is required'),
+  store_name: z.string().min(1, 'Store name is required'),
+  flavors: z.array(z.object({
+    flavor_name: z.string().optional(),
+    brand: z.string().optional(),
+  })).min(1, 'At least one flavor is required'),
+  notes: z.string().optional(),
+  order_details: z.string().optional(),
+});
 
-const CreateSession = () => {
+type SessionFormData = z.infer<typeof sessionSchema>;
+
+export const CreateSession: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    session_date: new Date().toISOString().slice(0, 16),
-    store_name: '',
-    mix_name: '',
-    notes: '',
-    order_details: '',
+  const [error, setError] = useState<string>('');
+  
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SessionFormData>({
+    resolver: zodResolver(sessionSchema),
+    defaultValues: {
+      session_date: new Date().toISOString().slice(0, 16),
+      flavors: [{ flavor_name: '', brand: '' }],
+    },
   });
-  const [flavors, setFlavors] = useState<FlavorInput[]>([
-    { flavor_name: '', brand: '' }
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'flavors',
+  });
 
-  const handleFlavorChange = (index: number, field: keyof FlavorInput, value: string) => {
-    setFlavors(prev => prev.map((flavor, i) => 
-      i === index ? { ...flavor, [field]: value } : flavor
-    ));
-  };
-
-  const addFlavor = () => {
-    setFlavors(prev => [...prev, { flavor_name: '', brand: '' }]);
-  };
-
-  const removeFlavor = (index: number) => {
-    if (flavors.length > 1) {
-      setFlavors(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    const validFlavors = flavors.filter(f => f.flavor_name.trim() && f.brand.trim());
-    
-    if (validFlavors.length === 0) {
-      setError('少なくとも1つのフレーバーを入力してください');
-      return;
-    }
-
-    if (!formData.store_name.trim() || !formData.mix_name.trim()) {
-      setError('店舗名とミックス名は必須です');
-      return;
-    }
-
+  const onSubmit = async (data: SessionFormData) => {
     try {
-      setIsLoading(true);
-      const sessionData: CreateSessionRequest = {
-        session_date: formData.session_date,
-        store_name: formData.store_name,
-        mix_name: formData.mix_name,
-        flavors: validFlavors,
-        notes: formData.notes || undefined,
-        order_details: formData.order_details || undefined,
-      };
+      setError('');
+      // Filter out empty flavors
+      const filteredFlavors = data.flavors.filter(
+        f => f.flavor_name || f.brand
+      );
+      
+      if (filteredFlavors.length === 0) {
+        setError('Please add at least one flavor');
+        return;
+      }
 
-      const newSession = await apiService.createSession(sessionData);
-      navigate(`/sessions/${newSession.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'セッションの作成に失敗しました');
-    } finally {
-      setIsLoading(false);
+      await apiClient.createSession({
+        ...data,
+        session_date: new Date(data.session_date).toISOString(),
+        flavors: filteredFlavors,
+      });
+      navigate('/sessions');
+    } catch (err) {
+      const error = err as AxiosError<ErrorResponse>;
+      setError(error.response?.data?.error || 'Failed to create session');
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">新しいセッションを記録</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          シーシャセッションの詳細を記録しましょう
-        </p>
+        <Link
+          to="/sessions"
+          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+        >
+          ← Back to sessions
+        </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
+      <div className="bg-white shadow sm:rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-6">
+            Log New Session
+          </h3>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-800">{error}</div>
+              </div>
+            )}
 
-        <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-          <div className="grid grid-cols-1 gap-6">
             <div>
               <label htmlFor="session_date" className="block text-sm font-medium text-gray-700">
-                セッション日時 *
+                Date & Time
               </label>
               <input
+                {...register('session_date')}
                 type="datetime-local"
-                name="session_date"
-                id="session_date"
-                required
-                value={formData.session_date}
-                onChange={handleInputChange}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
+              {errors.session_date && (
+                <p className="mt-1 text-sm text-red-600">{errors.session_date.message}</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="store_name" className="block text-sm font-medium text-gray-700">
-                店舗名 *
+                Store Name
               </label>
               <input
+                {...register('store_name')}
                 type="text"
-                name="store_name"
-                id="store_name"
-                required
-                value={formData.store_name}
-                onChange={handleInputChange}
-                placeholder="例: Cloud 9 Lounge"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Cloud 9 Lounge"
               />
+              {errors.store_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.store_name.message}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="mix_name" className="block text-sm font-medium text-gray-700">
-                ミックス名 *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Flavors
               </label>
-              <input
-                type="text"
-                name="mix_name"
-                id="mix_name"
-                required
-                value={formData.mix_name}
-                onChange={handleInputChange}
-                placeholder="例: Blueberry Mint"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  フレーバー *
-                </label>
-                <button
-                  type="button"
-                  onClick={addFlavor}
-                  className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-                >
-                  + フレーバーを追加
-                </button>
-              </div>
-              <div className="space-y-3">
-                {flavors.map((flavor, index) => (
-                  <div key={index} className="flex space-x-3">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        placeholder="フレーバー名"
-                        value={flavor.flavor_name}
-                        onChange={(e) => handleFlavorChange(index, 'flavor_name', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        placeholder="ブランド"
-                        value={flavor.brand}
-                        onChange={(e) => handleFlavorChange(index, 'brand', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
-                    </div>
-                    {flavors.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeFlavor(index)}
-                        className="text-red-600 hover:text-red-500"
-                      >
-                        削除
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="order_details" className="block text-sm font-medium text-gray-700">
-                注文詳細
-              </label>
-              <input
-                type="text"
-                name="order_details"
-                id="order_details"
-                value={formData.order_details}
-                onChange={handleInputChange}
-                placeholder="例: Bowl #3, Table 5"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex gap-2 mb-2">
+                  <input
+                    {...register(`flavors.${index}.flavor_name`)}
+                    type="text"
+                    placeholder="Flavor name"
+                    className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                  <input
+                    {...register(`flavors.${index}.brand`)}
+                    type="text"
+                    placeholder="Brand (optional)"
+                    className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => append({ flavor_name: '', brand: '' })}
+                className="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Add Flavor
+              </button>
+              {errors.flavors && (
+                <p className="mt-1 text-sm text-red-600">{errors.flavors.message}</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                メモ
+                Notes (optional)
               </label>
               <textarea
-                name="notes"
-                id="notes"
-                rows={4}
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="セッションについてのメモや感想..."
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                {...register('notes')}
+                rows={3}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Great mix, perfect balance..."
               />
             </div>
-          </div>
-        </div>
 
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={() => navigate('/sessions')}
-            className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            キャンセル
-          </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {isLoading ? '保存中...' : 'セッションを保存'}
-          </button>
+            <div>
+              <label htmlFor="order_details" className="block text-sm font-medium text-gray-700">
+                Order Details (optional)
+              </label>
+              <input
+                {...register('order_details')}
+                type="text"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Bowl #3, Table 5"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <Link
+                to="/sessions"
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Session'}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
-
-export default CreateSession;

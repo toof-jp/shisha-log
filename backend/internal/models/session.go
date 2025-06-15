@@ -31,7 +31,6 @@ type SessionWithFlavors struct {
 }
 
 type CreateSessionRequest struct {
-	UserID       string                `json:"user_id" validate:"required"`
 	SessionDate  time.Time             `json:"session_date" validate:"required"`
 	StoreName    string                `json:"store_name" validate:"required"`
 	Notes        *string               `json:"notes"`
@@ -41,7 +40,7 @@ type CreateSessionRequest struct {
 }
 
 type CreateFlavorRequest struct {
-	FlavorName string  `json:"flavor_name" validate:"required"`
+	FlavorName *string `json:"flavor_name"`
 	Brand      *string `json:"brand"`
 }
 

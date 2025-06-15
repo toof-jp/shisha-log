@@ -25,13 +25,9 @@ func (h *SessionHandler) CreateSession(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
-	// Ensure user can only create sessions for themselves
-	if req.UserID != userID {
-		return c.JSON(http.StatusForbidden, map[string]string{"error": "Cannot create sessions for other users"})
-	}
-
+	// Always use the authenticated user's ID
 	session := &models.ShishaSession{
-		UserID:       req.UserID,
+		UserID:       userID,
 		CreatedBy:    userID,
 		SessionDate:  req.SessionDate,
 		StoreName:    req.StoreName,

@@ -34,7 +34,6 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	var req struct {
 		UserID      string `json:"user_id" validate:"required,min=3,max=30"`
 		Password    string `json:"password" validate:"required,min=8"`
-		DisplayName string `json:"display_name" validate:"required"`
 	}
 
 	if err := c.Bind(&req); err != nil {
@@ -59,7 +58,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	}
 
 	// Create user
-	user, err := h.userRepo.Create(req.UserID, passwordHash, req.DisplayName)
+	user, err := h.userRepo.Create(req.UserID, passwordHash)
 	if err != nil {
 		// Log the actual error for debugging
 		c.Logger().Errorf("Failed to create user: %v", err)

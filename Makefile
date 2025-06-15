@@ -132,7 +132,7 @@ deploy-frontend: frontend-build
 
 deploy-backend: docker-build docker-push
 	@echo "Updating Lightsail instance with new image..."
-	@cd backend && ./scripts/update-lightsail-with-auth.sh
+	@./backend/scripts/update-lightsail-with-auth.sh
 
 deploy-all: deploy-frontend deploy-backend
 	@echo "Full deployment completed!"

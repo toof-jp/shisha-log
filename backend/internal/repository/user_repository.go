@@ -16,24 +16,23 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(userID, passwordHash, displayName string) (*models.User, error) {
+func (r *UserRepository) Create(userID, passwordHash string) (*models.User, error) {
 	user := &models.User{
 		ID:           uuid.New(),
 		UserID:       userID,
 		PasswordHash: passwordHash,
-		DisplayName:  displayName,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
 	query := `
-		INSERT INTO users (id, user_id, password_hash, display_name, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, user_id, password_hash, display_name, created_at, updated_at
+		INSERT INTO users (id, user_id, password_hash, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, user_id, password_hash, created_at, updated_at
 	`
 
-	err := r.db.QueryRow(query, user.ID, user.UserID, user.PasswordHash, user.DisplayName, user.CreatedAt, user.UpdatedAt).
-		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.DisplayName, &user.CreatedAt, &user.UpdatedAt)
+	err := r.db.QueryRow(query, user.ID, user.UserID, user.PasswordHash, user.CreatedAt, user.UpdatedAt).
+		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -44,13 +43,13 @@ func (r *UserRepository) Create(userID, passwordHash, displayName string) (*mode
 func (r *UserRepository) GetByID(id uuid.UUID) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, user_id, password_hash, display_name, created_at, updated_at
+		SELECT id, user_id, password_hash, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
 
 	err := r.db.QueryRow(query, id).
-		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.DisplayName, &user.CreatedAt, &user.UpdatedAt)
+		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +60,13 @@ func (r *UserRepository) GetByID(id uuid.UUID) (*models.User, error) {
 func (r *UserRepository) GetByUserID(userID string) (*models.User, error) {
 	user := &models.User{}
 	query := `
-		SELECT id, user_id, password_hash, display_name, created_at, updated_at
+		SELECT id, user_id, password_hash, created_at, updated_at
 		FROM users
 		WHERE user_id = $1
 	`
 
 	err := r.db.QueryRow(query, userID).
-		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.DisplayName, &user.CreatedAt, &user.UpdatedAt)
+		Scan(&user.ID, &user.UserID, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -78,11 +77,11 @@ func (r *UserRepository) GetByUserID(userID string) (*models.User, error) {
 func (r *UserRepository) Update(user *models.User) error {
 	query := `
 		UPDATE users
-		SET user_id = $2, display_name = $3, updated_at = $4
+		SET user_id = $2, updated_at = $3
 		WHERE id = $1
 	`
 
-	_, err := r.db.Exec(query, user.ID, user.UserID, user.DisplayName, time.Now())
+	_, err := r.db.Exec(query, user.ID, user.UserID, time.Now())
 	return err
 }
 

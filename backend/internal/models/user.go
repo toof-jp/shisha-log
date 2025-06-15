@@ -10,7 +10,6 @@ type User struct {
 	ID           uuid.UUID `json:"id"`
 	UserID       string    `json:"user_id"`
 	PasswordHash string    `json:"-"` // Never expose password hash in JSON
-	DisplayName  string    `json:"display_name"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

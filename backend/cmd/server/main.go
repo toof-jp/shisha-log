@@ -47,12 +47,10 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
-	profileRepo := repository.NewProfileRepository(supabaseClient)
 	sessionRepo := repository.NewSessionRepository(supabaseClient)
 
 	// Initialize handlers
 	authHandler := api.NewAuthHandler(userRepo, passwordService, jwtService)
-	profileHandler := api.NewProfileHandler(profileRepo)
 	sessionHandler := api.NewSessionHandler(sessionRepo)
 
 	// Initialize auth middleware
@@ -112,11 +110,6 @@ func main() {
 
 	// User routes
 	protected.GET("/users/me", authHandler.GetCurrentUser)
-
-	// Profile routes
-	protected.GET("/profile", profileHandler.GetProfile)
-	protected.POST("/profile", profileHandler.CreateProfile)
-	protected.PUT("/profile", profileHandler.UpdateProfile)
 
 	// Session routes
 	protected.POST("/sessions", sessionHandler.CreateSession)

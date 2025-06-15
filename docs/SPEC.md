@@ -32,7 +32,9 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - **Edit Session**: Modify existing session details
 - **Delete Session**: Remove unwanted sessions
 - **Session Details**:
-  - Store/location name
+  - Store/location name (optional)
+  - Mix name (optional)
+  - Creator/mixer name (optional)
   - Date and time
   - Multiple flavors per session
   - Personal notes
@@ -88,12 +90,14 @@ interface User {
 interface ShishaSession {
   id: string;
   user_id: string;
-  store_name: string;
+  store_name?: string;
+  mix_name?: string;
+  creator?: string;
   notes?: string;
   order_details?: string;
   created_at: Date;
   updated_at: Date;
-  flavors: SessionFlavor[];
+  flavors?: SessionFlavor[];
 }
 ```
 

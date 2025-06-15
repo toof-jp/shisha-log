@@ -34,8 +34,10 @@ export interface ShishaSession {
   user_id: string;
   created_by: string;
   session_date: string;
-  store_name: string;
-  flavors: SessionFlavor[];
+  store_name?: string;
+  mix_name?: string;
+  creator?: string;
+  flavors?: SessionFlavor[];
   notes?: string;
   order_details?: string;
   created_at: string;
@@ -44,8 +46,10 @@ export interface ShishaSession {
 
 export interface CreateSessionRequest {
   session_date: string;
-  store_name: string;
-  flavors: Omit<SessionFlavor, 'id' | 'session_id' | 'created_at'>[];
+  store_name?: string;
+  mix_name?: string;
+  creator?: string;
+  flavors?: Omit<SessionFlavor, 'id' | 'session_id' | 'created_at'>[];
   notes?: string;
   order_details?: string;
 }

@@ -177,11 +177,13 @@ Creates a new shisha session.
 
 **Request Body**
 
-Note: In the `flavors` array, both `flavor_name` and `brand` fields are optional.
+Note: The `flavors` array itself is optional. If provided, both `flavor_name` and `brand` fields within each flavor are optional. The `store_name`, `mix_name`, and `creator` fields are also optional.
 ```json
 {
   "session_date": "2024-01-01T20:00:00Z",
   "store_name": "Cloud 9 Lounge",
+  "mix_name": "Blueberry Mint Ice",
+  "creator": "Ahmed",
   "flavors": [
     {
       "flavor_name": "Blueberry",
@@ -199,6 +201,13 @@ Note: In the `flavors` array, both `flavor_name` and `brand` fields are optional
 }
 ```
 
+**Minimal Request Body Example** (only required field):
+```json
+{
+  "session_date": "2024-01-01T20:00:00Z"
+}
+```
+
 **Response**
 ```json
 {
@@ -207,6 +216,8 @@ Note: In the `flavors` array, both `flavor_name` and `brand` fields are optional
   "created_by": "user-uuid",
   "session_date": "2024-01-01T20:00:00Z",
   "store_name": "Cloud 9 Lounge",
+  "mix_name": "Blueberry Mint Ice",
+  "creator": "Ahmed",
   "flavors": [
     {
       "id": "flavor-uuid",
@@ -256,6 +267,8 @@ Gets all sessions for the authenticated user.
       "created_by": "user-uuid",
       "session_date": "2024-01-01T20:00:00Z",
       "store_name": "Cloud 9 Lounge",
+      "mix_name": "Blueberry Mint Ice",
+      "creator": "Ahmed",
       "flavors": [...],
       "notes": "Great mix, perfect balance",
       "order_details": "Bowl #3, Table 5",
@@ -284,6 +297,8 @@ Gets a specific session by ID.
   "created_by": "user-uuid",
   "session_date": "2024-01-01T20:00:00Z",
   "store_name": "Cloud 9 Lounge",
+  "mix_name": "Blueberry Mint Ice",
+  "creator": "Ahmed",
   "flavors": [...],
   "notes": "Great mix, perfect balance",
   "order_details": "Bowl #3, Table 5",
@@ -304,6 +319,8 @@ Updates a specific session.
 {
   "session_date": "2024-01-01T21:00:00Z",
   "store_name": "Cloud 9 Lounge Updated",
+  "mix_name": "Blueberry Mint Ice Extra",
+  "creator": "Mohammed",
   "notes": "Even better with ice",
   "order_details": "Bowl #3, Table 5, Extra ice"
 }
@@ -317,6 +334,8 @@ Updates a specific session.
   "created_by": "user-uuid",
   "session_date": "2024-01-01T21:00:00Z",
   "store_name": "Cloud 9 Lounge Updated",
+  "mix_name": "Blueberry Mint Ice Extra",
+  "creator": "Mohammed",
   "flavors": [...],
   "notes": "Even better with ice",
   "order_details": "Bowl #3, Table 5, Extra ice",

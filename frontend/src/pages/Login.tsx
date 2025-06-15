@@ -8,8 +8,8 @@ import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '../types/api';
 
 const loginSchema = z.object({
-  user_id: z.string().min(1, 'User ID is required'),
-  password: z.string().min(1, 'Password is required'),
+  user_id: z.string().min(1, 'ユーザーIDを入力してください'),
+  password: z.string().min(1, 'パスワードを入力してください'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -34,7 +34,8 @@ export const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
-      setError(error.response?.data?.error || 'Failed to login');
+      const errorMessage = error.response?.data?.error || 'ログインに失敗しました';
+      setError(errorMessage === 'Invalid credentials' ? 'ユーザーIDまたはパスワードが正しくありません' : errorMessage);
     }
   };
 
@@ -43,15 +44,15 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            ログイン
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            アカウントをお持ちでない方は{' '}
             <Link
               to="/register"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              create a new account
+              新規登録
             </Link>
           </p>
         </div>
@@ -64,14 +65,14 @@ export const Login: React.FC = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="user_id" className="sr-only">
-                User ID
+                ユーザーID
               </label>
               <input
                 {...register('user_id')}
                 type="text"
                 autoComplete="username"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="User ID"
+                placeholder="ユーザーID"
               />
               {errors.user_id && (
                 <p className="mt-1 text-sm text-red-600">{errors.user_id.message}</p>
@@ -79,14 +80,14 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
-                Password
+                パスワード
               </label>
               <input
                 {...register('password')}
                 type="password"
                 autoComplete="current-password"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="パスワード"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -100,7 +101,7 @@ export const Login: React.FC = () => {
               disabled={isSubmitting}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? 'ログイン中...' : 'ログイン'}
             </button>
           </div>
         </form>

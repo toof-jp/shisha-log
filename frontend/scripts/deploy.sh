@@ -95,8 +95,8 @@ WAIT_TIME=0
 MAX_WAIT_TIME=300 # 5 minutes
 
 while [ "$INVALIDATION_STATUS" = "InProgress" ] && [ $WAIT_TIME -lt $MAX_WAIT_TIME ]; do
-    sleep 10
-    WAIT_TIME=$((WAIT_TIME + 10))
+    sleep 1
+    WAIT_TIME=$((WAIT_TIME + 1))
     
     INVALIDATION_STATUS=$(aws cloudfront get-invalidation \
         --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \

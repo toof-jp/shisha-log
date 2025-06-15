@@ -45,16 +45,10 @@ func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSe
 	// Create flavors
 	var sessionFlavors []models.SessionFlavor
 	for _, flavor := range flavors {
-		// Default empty flavor name if not provided
-		flavorName := ""
-		if flavor.FlavorName != nil {
-			flavorName = *flavor.FlavorName
-		}
-		
 		sessionFlavor := models.SessionFlavor{
 			ID:         uuid.New().String(),
 			SessionID:  createdSession.ID,
-			FlavorName: flavorName,
+			FlavorName: flavor.FlavorName,
 			Brand:      flavor.Brand,
 		}
 		sessionFlavors = append(sessionFlavors, sessionFlavor)
@@ -195,28 +189,113 @@ func (r *SessionRepository) Update(ctx context.Context, id string, update *model
 		updateMap["session_date"] = *update.SessionDate
 	}
 	if update.StoreName != nil {
-		updateMap["store_name"] = *update.StoreName
+		if *update.StoreName == "" {
+			updateMap["store_name"] = nil
+		} else {
+			updateMap["store_name"] = *update.StoreName
+		}
 	}
 	if update.Notes != nil {
-		updateMap["notes"] = *update.Notes
+		if *update.Notes == "" {
+			updateMap["notes"] = nil
+		} else {
+			updateMap["notes"] = *update.Notes
+		}
 	}
 	if update.OrderDetails != nil {
-		updateMap["order_details"] = *update.OrderDetails
+		if *update.OrderDetails == "" {
+			updateMap["order_details"] = nil
+		} else {
+			updateMap["order_details"] = *update.OrderDetails
+		}
 	}
 	if update.MixName != nil {
-		updateMap["mix_name"] = *update.MixName
+		if *update.MixName == "" {
+			updateMap["mix_name"] = nil
+		} else {
+			updateMap["mix_name"] = *update.MixName
+		}
+	}
+	if update.Creator != nil {
+		if *update.Creator == "" {
+			updateMap["creator"] = nil
+		} else {
+			updateMap["creator"] = *update.Creator
+		}
 	}
 
-	if len(updateMap) == 0 {
-		return nil
+	// Debug log
+	// fmt.Printf("Updating session %s with data: %+v\n", id, updateMap)
+
+	// Update session fields if any
+	if len(updateMap) > 0 {
+		_, _, err := r.client.From("shisha_sessions").
+			Update(updateMap, "", "").
+			Eq("id", id).
+			Execute()
+		
+		if err != nil {
+			return err
+		}
 	}
 
-	_, _, err := r.client.From("shisha_sessions").
-		Update(updateMap, "", "").
-		Eq("id", id).
+	// Update flavors if provided
+	if update.Flavors != nil {
+		// Delete existing flavors
+		_, _, err := r.client.From("session_flavors").
+			Delete("", "").
+			Eq("session_id", id).
+			Execute()
+		
+		if err != nil {
+			return err
+		}
+
+		// Insert new flavors
+		var sessionFlavors []models.SessionFlavor
+		for _, flavor := range *update.Flavors {
+			sessionFlavor := models.SessionFlavor{
+				ID:         uuid.New().String(),
+				SessionID:  id,
+				FlavorName: flavor.FlavorName,
+				Brand:      flavor.Brand,
+			}
+			sessionFlavors = append(sessionFlavors, sessionFlavor)
+		}
+
+		if len(sessionFlavors) > 0 {
+			_, _, err = r.client.From("session_flavors").
+				Insert(sessionFlavors, false, "", "", "").
+				Execute()
+			
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *SessionRepository) GetTotalCount(ctx context.Context, userID string) (int, error) {
+	// Supabase doesn't provide a direct count method via REST API
+	// So we'll fetch all sessions without limit and count them
+	data, _, err := r.client.From("shisha_sessions").
+		Select("id", "exact", false).
+		Eq("user_id", userID).
 		Execute()
-
-	return err
+	
+	if err != nil {
+		return 0, err
+	}
+	
+	var sessions []map[string]interface{}
+	err = json.Unmarshal(data, &sessions)
+	if err != nil {
+		return 0, err
+	}
+	
+	return len(sessions), nil
 }
 
 func (r *SessionRepository) Delete(ctx context.Context, id string) error {

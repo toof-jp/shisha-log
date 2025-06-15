@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
-import { format } from 'date-fns';
+import { formatDateTime } from '../utils/dateFormat';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -19,10 +19,11 @@ export const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiClient.getSessions(5, 0);
+      console.log('Dashboard sessions response:', response);
       setRecentSessions(response.sessions || []);
     } catch (err) {
-      setError('Failed to load sessions');
-      console.error(err);
+      setError('セッションの読み込みに失敗しました');
+      console.error('Dashboard error:', err);
       setRecentSessions([]);
     } finally {
       setLoading(false);
@@ -30,34 +31,34 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.user_id}!
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          おかえりなさい、{user?.user_id}さん！
         </h1>
-        <p className="mt-2 text-gray-600">
-          Track your shisha sessions and discover new flavor combinations
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+          シーシャセッションを記録して、新しいフレーバーの組み合わせを発見しましょう
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
+          <div className="p-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
-              Total Sessions
+              総セッション数
             </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            <dd className="mt-1 text-2xl sm:text-3xl font-semibold text-gray-900">
               {recentSessions?.length || 0}
             </dd>
           </div>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
+        <div className="bg-white overflow-hidden shadow rounded-lg sm:col-span-2 lg:col-span-1">
+          <div className="p-5 sm:p-6">
             <Link
               to="/sessions/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Log New Session
+              新規セッションを記録
             </Link>
           </div>
         </div>
@@ -66,12 +67,12 @@ export const Dashboard: React.FC = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Recent Sessions
+            最近のセッション
           </h3>
         </div>
         {loading ? (
           <div className="px-4 py-5 sm:px-6">
-            <div className="text-center">Loading...</div>
+            <div className="text-center">読み込み中...</div>
           </div>
         ) : error ? (
           <div className="px-4 py-5 sm:px-6">
@@ -80,7 +81,7 @@ export const Dashboard: React.FC = () => {
         ) : recentSessions.length === 0 ? (
           <div className="px-4 py-5 sm:px-6">
             <div className="text-center text-gray-500">
-              No sessions yet. Start logging your shisha experiences!
+              まだセッションがありません。シーシャ体験の記録を始めましょう！
             </div>
           </div>
         ) : (
@@ -94,20 +95,25 @@ export const Dashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-indigo-600 truncate">
-                        {session.store_name}
+                        {session.store_name || session.mix_name || '無題のセッション'}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {format(new Date(session.session_date), 'PPP')}
+                        {formatDateTime(session.session_date)}
+                        {session.creator && <span> • {session.creator}</span>}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {session.flavors.map((flavor, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                          >
-                            {flavor.flavor_name || 'Unknown'}
-                          </span>
-                        ))}
+                        {session.flavors && session.flavors.length > 0 ? (
+                          session.flavors.map((flavor, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                            >
+                              {flavor.flavor_name || '不明'}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 text-xs">フレーバーなし</span>
+                        )}
                       </div>
                     </div>
                     <div className="ml-4 flex-shrink-0">
@@ -135,7 +141,7 @@ export const Dashboard: React.FC = () => {
               to="/sessions"
               className="text-sm text-indigo-600 hover:text-indigo-900"
             >
-              View all sessions →
+              すべてのセッションを見る →
             </Link>
           </div>
         )}

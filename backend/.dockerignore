@@ -1,0 +1,41 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Infrastructure
+infra/
+terraform/
+
+# Development files
+.env
+.env.*
+*.log
+
+# Test files
+*_test.go
+test/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary files
+tmp/
+temp/

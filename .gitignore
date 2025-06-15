@@ -1,0 +1,48 @@
+# Environment files
+.env
+.env.backup
+!.env.example
+.acm_cert
+
+# Backend
+backend/bin/
+backend/tmp/
+backend/vendor/
+backend/*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+frontend/*.log
+
+# Infrastructure
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/.terraform.lock.hcl
+infra/terraform.tfstate.d/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.cache/
+coverage/
+*.pid
+*.seed
+*.pid.lock

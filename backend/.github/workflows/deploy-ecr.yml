@@ -1,0 +1,167 @@
+name: Deploy to ECR and Lightsail
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_PUBLIC_REGION: us-east-1  # ECR Public is only in us-east-1
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set environment based on branch
+      id: set-env
+      run: |
+        if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+          echo "image_tag=latest" >> $GITHUB_OUTPUT
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+          echo "image_tag=dev-latest" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.ECR_PUBLIC_REGION }}
+
+    - name: Login to Amazon ECR Public
+      id: login-ecr-public
+      uses: aws-actions/amazon-ecr-login@v2
+      with:
+        registry-type: public
+
+    - name: Get ECR Public Registry Alias
+      id: get-registry
+      run: |
+        REGISTRY_ALIAS=$(aws ecr-public describe-registries --query 'registries[0].registryId' --output text)
+        echo "registry_alias=$REGISTRY_ALIAS" >> $GITHUB_OUTPUT
+
+    - name: Build, tag, and push image to Amazon ECR Public
+      id: build-image
+      env:
+        REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+        REGISTRY_ALIAS: ${{ steps.get-registry.outputs.registry_alias }}
+        REPOSITORY: shisha-log
+        IMAGE_TAG: ${{ steps.set-env.outputs.image_tag }}
+      run: |
+        docker build -t $REPOSITORY:$IMAGE_TAG .
+        docker tag $REPOSITORY:$IMAGE_TAG $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+        docker tag $REPOSITORY:$IMAGE_TAG $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.sha }}
+        docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+        docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.sha }}
+        echo "image=$REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Configure AWS credentials for Lightsail
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Deploy to Lightsail
+      run: |
+        INSTANCE_NAME="shisha-log-${{ steps.set-env.outputs.environment }}"
+        
+        # Check if instance is running
+        aws lightsail get-instance --instance-name $INSTANCE_NAME
+        
+        # Create deployment command
+        DEPLOY_COMMAND="cd /opt/shisha-log && \
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws && \
+          docker pull ${{ steps.build-image.outputs.image }} && \
+          docker-compose up -d --force-recreate && \
+          sleep 30 && \
+          curl -f http://localhost:8080/health"
+        
+        echo "Deployment command ready for instance: $INSTANCE_NAME"
+        echo "Image: ${{ steps.build-image.outputs.image }}"
+
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set environment
+      id: set-env
+      run: |
+        if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.9.0
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Get ECR Public Registry Alias
+      id: get-registry
+      run: |
+        aws configure set region us-east-1
+        REGISTRY_ALIAS=$(aws ecr-public describe-registries --query 'registries[0].registryId' --output text)
+        echo "registry_alias=$REGISTRY_ALIAS" >> $GITHUB_OUTPUT
+        aws configure set region ${{ env.AWS_REGION }}
+
+    - name: Terraform Init
+      working-directory: infra
+      run: terraform init
+
+    - name: Update terraform.tfvars with ECR alias
+      working-directory: infra
+      run: |
+        sed -i "s/YOUR_ECR_ALIAS/${{ steps.get-registry.outputs.registry_alias }}/g" environments/${{ steps.set-env.outputs.environment }}/terraform.tfvars
+
+    - name: Terraform Plan
+      working-directory: infra
+      run: |
+        terraform workspace select ${{ steps.set-env.outputs.environment }} || terraform workspace new ${{ steps.set-env.outputs.environment }}
+        terraform plan -var-file=environments/${{ steps.set-env.outputs.environment }}/terraform.tfvars -no-color
+      env:
+        TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
+        TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+        TF_VAR_supabase_service_role_key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+        TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+        TF_VAR_registry_username: AWS
+        TF_VAR_registry_password: ${{ secrets.ECR_PUBLIC_TOKEN }}
+
+    - name: Terraform Apply
+      working-directory: infra
+      if: github.event_name == 'workflow_dispatch'
+      run: terraform apply -var-file=environments/${{ steps.set-env.outputs.environment }}/terraform.tfvars -auto-approve
+      env:
+        TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
+        TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+        TF_VAR_supabase_service_role_key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+        TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+        TF_VAR_registry_username: AWS
+        TF_VAR_registry_password: ${{ secrets.ECR_PUBLIC_TOKEN }}
+
+    - name: Output Static IP
+      working-directory: infra
+      run: terraform output static_ip_address

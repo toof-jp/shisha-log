@@ -144,7 +144,7 @@ export const Layout: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <div className="px-3 py-2 text-gray-700 text-sm border-b border-gray-200">
-                  Welcome, <span className="font-medium">{user?.user_id}</span>
+                  ようこそ、<span className="font-medium">{user?.user_id}</span>さん
                 </div>
                 <Link
                   to="/dashboard"
@@ -155,7 +155,7 @@ export const Layout: React.FC = () => {
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                   } block px-3 py-2 rounded-md text-base font-medium`}
                 >
-                  Dashboard
+                  ダッシュボード
                 </Link>
                 <Link
                   to="/sessions"
@@ -166,7 +166,7 @@ export const Layout: React.FC = () => {
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                   } block px-3 py-2 rounded-md text-base font-medium`}
                 >
-                  Sessions
+                  セッション
                 </Link>
                 <Link
                   to="/sessions/new"
@@ -177,7 +177,7 @@ export const Layout: React.FC = () => {
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                   } block px-3 py-2 rounded-md text-base font-medium`}
                 >
-                  New Session
+                  新規セッション
                 </Link>
                 <button
                   onClick={() => {
@@ -186,7 +186,7 @@ export const Layout: React.FC = () => {
                   }}
                   className="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
                 >
-                  Logout
+                  ログアウト
                 </button>
               </>
             ) : (
@@ -196,14 +196,14 @@ export const Layout: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
                 >
-                  Login
+                  ログイン
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="bg-indigo-600 text-white hover:bg-indigo-700 block px-3 py-2 rounded-md text-base font-medium text-center"
                 >
-                  Sign up
+                  新規登録
                 </Link>
               </>
             )}

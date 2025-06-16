@@ -535,15 +535,27 @@ func (r *SessionRepository) GetByDate(ctx context.Context, userID string, date s
 }
 
 func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, startTime string, endTime string) ([]models.SessionWithFlavors, error) {
-	// Debug log
-	log.Printf("GetByDateRange: userID=%s, start=%s, end=%s", userID, startTime, endTime)
 	
-	// Query sessions for the specific date range
+	// Parse start and end times for filtering
+	startTimeParsed, err := time.Parse(time.RFC3339, startTime)
+	if err != nil {
+		return nil, err
+	}
+	endTimeParsed, err := time.Parse(time.RFC3339, endTime)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Query sessions with a wider range to account for potential Supabase timezone issues
+	// We'll filter manually afterwards
+	bufferStart := startTimeParsed.Add(-24 * time.Hour)
+	bufferEnd := endTimeParsed.Add(24 * time.Hour)
+	
 	data, _, err := r.client.From("shisha_sessions").
 		Select("*", "exact", false).
 		Eq("user_id", userID).
-		Gte("session_date", startTime).
-		Lt("session_date", endTime).
+		Gte("session_date", bufferStart.Format(time.RFC3339)).
+		Lt("session_date", bufferEnd.Format(time.RFC3339)).
 		Order("session_date", nil). // nil uses default options (descending)
 		Execute()
 
@@ -556,15 +568,21 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 		return nil, err
 	}
 	
-	// Debug log
-	log.Printf("GetByDateRange: Found %d sessions", len(sessions))
-	for _, s := range sessions {
-		log.Printf("  Session %s: date=%s", s.ID[:8], s.SessionDate)
+	// Manual filtering to ensure we only get sessions within the exact time range
+	var filteredSessions []models.ShishaSession
+	for _, session := range sessions {
+		// SessionDate is already a time.Time after JSON unmarshaling
+		sessionTime := session.SessionDate
+		
+		// Check if session falls within the requested range
+		if sessionTime.Equal(startTimeParsed) || (sessionTime.After(startTimeParsed) && sessionTime.Before(endTimeParsed)) {
+			filteredSessions = append(filteredSessions, session)
+		}
 	}
 
 	// Fetch flavors for each session
 	var sessionsWithFlavors []models.SessionWithFlavors
-	for _, session := range sessions {
+	for _, session := range filteredSessions {
 		sessionWithFlavors := models.SessionWithFlavors{ShishaSession: session}
 
 		// Fetch flavors

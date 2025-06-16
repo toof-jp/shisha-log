@@ -27,7 +27,7 @@ help:
 	@echo ""
 	@echo "Database Migration Commands:"
 	@echo "  make db-migrate         - Apply database migrations"
-	@echo "  make db-migrate-unified - Apply unified schema (WARNING: deletes all data)"
+	@echo "  make db-reset        - Reset database with new schema (WARNING: deletes all data)"
 	@echo "  make db-status          - Check current database schema status"
 	@echo ""
 	@echo "Infrastructure Commands:"
@@ -38,8 +38,6 @@ help:
 	@echo "  make infra-destroy-force - Force destroy without confirmation"
 	@echo "  make infra-output       - Show Terraform outputs"
 	@echo "  make infra-apply-module MODULE=name - Apply specific module"
-	@echo "  make infra-unified-plan - Plan unified domain infrastructure"
-	@echo "  make infra-unified-apply - Apply unified domain infrastructure"
 	@echo ""
 	@echo "Docker Commands:"
 	@echo "  make docker-build       - Build backend Docker image"
@@ -242,40 +240,6 @@ infra-destroy-force:
 		-var="registry_password=$$REGISTRY_PASSWORD" \
 		-auto-approve
 
-# Unified domain infrastructure
-infra-unified-init:
-	cd infra && terraform init
-
-infra-unified-plan: manage-acm-cert
-	@echo "Planning unified infrastructure..."
-	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
-	if [ -f .acm_cert ]; then . ./.acm_cert; fi; \
-	cd infra && terraform plan -var-file=environments/prod/terraform-unified.tfvars \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
-		-var="create_acm_certificate=$${CREATE_ACM_CERTIFICATE:-true}" \
-		-var="acm_certificate_arn=$${ACM_CERTIFICATE_ARN:-}"
-
-infra-unified-apply: update-ecr-password manage-acm-cert
-	@echo "Applying unified infrastructure..."
-	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
-	if [ -f .acm_cert ]; then . ./.acm_cert; fi; \
-	cd infra && terraform apply -var-file=environments/prod/terraform-unified.tfvars \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
-		-var="create_acm_certificate=$${CREATE_ACM_CERTIFICATE:-true}" \
-		-var="acm_certificate_arn=$${ACM_CERTIFICATE_ARN:-}"
-
 infra-output:
 	cd infra && terraform output
 
@@ -399,15 +363,15 @@ route53-find-zone:
 route53-list-records:
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	ZONE_ID=$$(cd infra && terraform output -raw route53_zone_id 2>/dev/null); \
-	if [ -z "$$ZONE_ID" ]; then echo "Error: No Route 53 zone found. Run 'make infra-unified-apply' first."; exit 1; fi; \
+	if [ -z "$$ZONE_ID" ]; then echo "Error: No Route 53 zone found. Run 'make infra-apply' first."; exit 1; fi; \
 	echo "Listing records for zone $$ZONE_ID..."; \
 	aws route53 list-resource-record-sets --hosted-zone-id $$ZONE_ID --output table
 
 route53-test-dns:
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
-	APP_DOMAIN=$$(cd infra && terraform output -raw route53_app_fqdn 2>/dev/null); \
-	API_DOMAIN=$$(cd infra && terraform output -raw route53_api_fqdn 2>/dev/null); \
-	if [ -z "$$APP_DOMAIN" ]; then echo "Error: No Route 53 configuration found."; exit 1; fi; \
+	if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
+	APP_DOMAIN=$${DOMAIN_NAME:-shisha.toof.jp}; \
+	API_DOMAIN=api.$${DOMAIN_NAME:-shisha.toof.jp}; \
 	echo "Testing DNS resolution..."; \
 	echo "App domain: $$APP_DOMAIN"; \
 	dig +short $$APP_DOMAIN; \
@@ -428,18 +392,18 @@ db-migrate:
 	done; \
 	echo "✓ Migrations applied successfully!"
 
-db-migrate-unified:
-	@echo "=== Applying Unified Schema ==="
+db-reset:
+	@echo "=== Resetting Database with New Schema ==="
 	@echo "WARNING: This will DELETE ALL DATA!"
 	@echo ""
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	if [ -z "$$DATABASE_URL" ]; then echo "Error: DATABASE_URL not set in .env"; exit 1; fi; \
-	echo "This will reset the database and apply the unified schema."; \
+	echo "This will reset the database and apply a fresh schema."; \
 	echo "Type 'yes' to continue:"; \
 	read CONFIRM; \
 	if [ "$$CONFIRM" != "yes" ]; then echo "Operation cancelled"; exit 1; fi; \
 	echo ""; \
-	echo "Applying unified schema..."; \
+	echo "Applying fresh schema..."; \
 	cd backend/scripts && ./apply-unified-schema.sh
 
 db-status:

@@ -4,33 +4,38 @@ import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-interface CreatorCount {
-  creator: string;
+interface DataItem {
+  name: string;
   count: number;
 }
 
-interface CreatorChartProps {
-  creators: CreatorCount[];
+interface StatisticsChartProps {
+  data: DataItem[];
   title?: string;
+  countLabel?: string; // e.g., "回", "個"
 }
 
-export const CreatorChart: React.FC<CreatorChartProps> = ({ creators, title = "作成者別セッション" }) => {
-  const data = {
-    labels: creators.map(c => c.creator || '作成者なし'),
+export const StatisticsChart: React.FC<StatisticsChartProps> = ({ 
+  data, 
+  title = "統計", 
+  countLabel = "回" 
+}) => {
+  const chartData = {
+    labels: data.map(item => item.name),
     datasets: [
       {
-        data: creators.map(c => c.count),
+        data: data.map(item => item.count),
         backgroundColor: [
+          '#4F46E5', // indigo-600
+          '#7C3AED', // violet-600
+          '#2563EB', // blue-600
+          '#0891B2', // cyan-600
           '#059669', // emerald-600
-          '#10B981', // emerald-500
-          '#34D399', // emerald-400
-          '#6EE7B7', // emerald-300
-          '#A7F3D0', // emerald-200
-          '#065F46', // emerald-800
-          '#047857', // emerald-700
-          '#D1FAE5', // emerald-100
-          '#064E3B', // emerald-900
-          '#F3F4F6', // gray-100
+          '#84CC16', // lime-600
+          '#EAB308', // yellow-600
+          '#EA580C', // orange-600
+          '#DC2626', // red-600
+          '#DB2777', // pink-600
         ],
         borderColor: '#fff',
         borderWidth: 2,
@@ -58,7 +63,7 @@ export const CreatorChart: React.FC<CreatorChartProps> = ({ creators, title = "�
             const value = context.parsed || 0;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
             const percentage = ((value / total) * 100).toFixed(1);
-            return `${label}: ${value}回 (${percentage}%)`;
+            return `${label}: ${value}${countLabel} (${percentage}%)`;
           }
         }
       }
@@ -68,11 +73,11 @@ export const CreatorChart: React.FC<CreatorChartProps> = ({ creators, title = "�
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
-      {creators.length === 0 ? (
+      {data.length === 0 ? (
         <p className="text-gray-500 text-sm">データがありません</p>
       ) : (
         <div className="h-64">
-          <Pie data={data} options={options} />
+          <Pie data={chartData} options={options} />
         </div>
       )}
     </div>

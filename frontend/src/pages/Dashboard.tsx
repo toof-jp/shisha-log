@@ -4,15 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import type { ShishaSession, FlavorStats, StoreStats, CreatorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
-import { FlavorChart } from '../components/FlavorChart';
-import { FlavorRanking } from '../components/FlavorRanking';
 import { SessionCalendar } from '../components/SessionCalendar';
 import { DailySessionsModal } from '../components/DailySessionsModal';
 import { sortFlavorsByOrder } from '../utils/flavorSort';
-import { StoreChart } from '../components/StoreChart';
-import { StoreRanking } from '../components/StoreRanking';
-import { CreatorChart } from '../components/CreatorChart';
-import { CreatorRanking } from '../components/CreatorRanking';
+import { StatisticsChart } from '../components/StatisticsChart';
+import { StatisticsRanking } from '../components/StatisticsRanking';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -221,16 +217,14 @@ export const Dashboard: React.FC = () => {
                   <div className="mb-8">
                     <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <FlavorRanking 
-                        data={flavorStats.main_flavors} 
+                      <StatisticsRanking 
+                        data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
                         title="TOP 10 メインフレーバー" 
                       />
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <FlavorChart 
-                          data={flavorStats.main_flavors.slice(0, 5)} 
-                          title="メインフレーバー構成比" 
-                        />
-                      </div>
+                      <StatisticsChart 
+                        data={flavorStats.main_flavors.slice(0, 5).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                        title="メインフレーバー構成比" 
+                      />
                     </div>
                   </div>
 
@@ -238,16 +232,14 @@ export const Dashboard: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <FlavorRanking 
-                        data={flavorStats.all_flavors} 
+                      <StatisticsRanking 
+                        data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
                         title="TOP 10 全フレーバー" 
                       />
-                      <div className="bg-white shadow rounded-lg p-6">
-                        <FlavorChart 
-                          data={flavorStats.all_flavors.slice(0, 5)} 
-                          title="全フレーバー構成比" 
-                        />
-                      </div>
+                      <StatisticsChart 
+                        data={flavorStats.all_flavors.slice(0, 5).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                        title="全フレーバー構成比" 
+                      />
                     </div>
                   </div>
                 </div>
@@ -258,16 +250,14 @@ export const Dashboard: React.FC = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗統計</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <StoreRanking 
-                      stores={storeStats.stores} 
+                    <StatisticsRanking 
+                      data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
                       title="TOP 10 店舗" 
                     />
-                    <div className="bg-white shadow rounded-lg p-6">
-                      <StoreChart 
-                        stores={storeStats.stores.slice(0, 5)} 
-                        title="店舗別訪問構成比" 
-                      />
-                    </div>
+                    <StatisticsChart 
+                      data={storeStats.stores.slice(0, 5).map(s => ({ name: s.store_name, count: s.count }))} 
+                      title="店舗別訪問構成比" 
+                    />
                   </div>
                 </div>
               )}
@@ -277,16 +267,14 @@ export const Dashboard: React.FC = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者統計</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <CreatorRanking 
-                      creators={creatorStats.creators} 
+                    <StatisticsRanking 
+                      data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
                       title="TOP 10 作成者" 
                     />
-                    <div className="bg-white shadow rounded-lg p-6">
-                      <CreatorChart 
-                        creators={creatorStats.creators.slice(0, 5)} 
-                        title="作成者別構成比" 
-                      />
-                    </div>
+                    <StatisticsChart 
+                      data={creatorStats.creators.slice(0, 5).map(c => ({ name: c.creator, count: c.count }))} 
+                      title="作成者別構成比" 
+                    />
                   </div>
                 </div>
               )}

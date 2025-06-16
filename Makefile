@@ -25,6 +25,11 @@ help:
 	@echo "  make deploy-backend     - Build and push backend Docker image"
 	@echo "  make deploy-all         - Deploy both frontend and backend"
 	@echo ""
+	@echo "Database Migration Commands:"
+	@echo "  make db-migrate         - Apply database migrations"
+	@echo "  make db-migrate-unified - Apply unified schema (WARNING: deletes all data)"
+	@echo "  make db-status          - Check current database schema status"
+	@echo ""
 	@echo "Infrastructure Commands:"
 	@echo "  make infra-init         - Initialize Terraform"
 	@echo "  make infra-plan         - Plan infrastructure changes"
@@ -408,3 +413,41 @@ route53-test-dns:
 	dig +short $$APP_DOMAIN; \
 	echo "API domain: $$API_DOMAIN"; \
 	dig +short $$API_DOMAIN
+
+# Database Migration Commands
+db-migrate:
+	@echo "Applying database migrations..."
+	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
+	if [ -z "$$DATABASE_URL" ]; then echo "Error: DATABASE_URL not set in .env"; exit 1; fi; \
+	echo "Applying migrations to database..."; \
+	for migration in backend/migrations/*.sql; do \
+		if [[ "$$migration" != *"reset_and_apply"* ]] && [[ "$$migration" != *"archive"* ]]; then \
+			echo "Applying $$migration..."; \
+			psql "$$DATABASE_URL" -f "$$migration" || exit 1; \
+		fi; \
+	done; \
+	echo "✓ Migrations applied successfully!"
+
+db-migrate-unified:
+	@echo "=== Applying Unified Schema ==="
+	@echo "WARNING: This will DELETE ALL DATA!"
+	@echo ""
+	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
+	if [ -z "$$DATABASE_URL" ]; then echo "Error: DATABASE_URL not set in .env"; exit 1; fi; \
+	echo "This will reset the database and apply the unified schema."; \
+	echo "Type 'yes' to continue:"; \
+	read CONFIRM; \
+	if [ "$$CONFIRM" != "yes" ]; then echo "Operation cancelled"; exit 1; fi; \
+	echo ""; \
+	echo "Applying unified schema..."; \
+	cd backend/scripts && ./apply-unified-schema.sh
+
+db-status:
+	@echo "Checking database schema status..."
+	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
+	if [ -z "$$DATABASE_URL" ]; then echo "Error: DATABASE_URL not set in .env"; exit 1; fi; \
+	echo "Database tables:"; \
+	psql "$$DATABASE_URL" -c "\dt public.*" | grep -E "users|shisha_sessions|session_flavors|password_reset_tokens"; \
+	echo ""; \
+	echo "Session flavors columns:"; \
+	psql "$$DATABASE_URL" -c "\d public.session_flavors" | grep -E "Column|flavor_order|--" || echo "Table not found"

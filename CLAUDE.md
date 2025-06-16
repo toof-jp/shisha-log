@@ -58,6 +58,10 @@ Shisha Log is a full-stack application for tracking and managing shisha (hookah)
   - `app/hooks/` - Custom React hooks
   - `app/lib/` - API client and utilities
   - `app/types/` - TypeScript interfaces
+- **Dashboard Features**:
+  - Tab-based interface (Calendar view and Statistics view)
+  - Calendar component showing daily session counts
+  - Flavor statistics with charts and rankings
 
 ### Database Schema
 

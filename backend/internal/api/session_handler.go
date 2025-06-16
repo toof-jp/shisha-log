@@ -43,7 +43,7 @@ func (h *SessionHandler) CreateSession(c echo.Context) error {
 	if req.Flavors != nil {
 		flavors = *req.Flavors
 	}
-	
+
 	createdSession, err := h.repo.Create(c.Request().Context(), session, flavors)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create session"})
@@ -55,6 +55,11 @@ func (h *SessionHandler) CreateSession(c echo.Context) error {
 func (h *SessionHandler) GetSession(c echo.Context) error {
 	sessionID := c.Param("id")
 	userID := c.Get("user_id").(string)
+
+	// Special handling for calendar route (workaround for Echo routing issue)
+	if sessionID == "calendar" {
+		return h.GetCalendarData(c)
+	}
 
 	session, err := h.repo.GetByID(c.Request().Context(), sessionID)
 	if err != nil {
@@ -178,4 +183,30 @@ func (h *SessionHandler) GetFlavorStats(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, stats)
+}
+
+func (h *SessionHandler) GetCalendarData(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	// Get year and month from query parameters
+	yearStr := c.QueryParam("year")
+	monthStr := c.QueryParam("month")
+
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid year parameter"})
+	}
+
+	month, err := strconv.Atoi(monthStr)
+	if err != nil || month < 1 || month > 12 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid month parameter"})
+	}
+
+	calendarData, err := h.repo.GetCalendarData(c.Request().Context(), userID, year, month)
+	if err != nil {
+		log.Printf("GetCalendarData error for user %s: %v", userID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get calendar data"})
+	}
+
+	return c.JSON(http.StatusOK, calendarData)
 }

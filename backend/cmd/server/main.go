@@ -74,7 +74,7 @@ func main() {
 	// Health check
 	e.GET("/health", func(c echo.Context) error {
 		response := map[string]interface{}{
-			"status": "ok",
+			"status":  "ok",
 			"version": version.Info(),
 		}
 		return c.JSON(200, response)
@@ -82,11 +82,11 @@ func main() {
 
 	// API routes
 	apiGroup := e.Group("/api/v1")
-	
+
 	// API health check
 	apiGroup.GET("/health", func(c echo.Context) error {
 		response := map[string]interface{}{
-			"status": "ok",
+			"status":  "ok",
 			"version": version.Info(),
 		}
 		return c.JSON(200, response)
@@ -114,10 +114,11 @@ func main() {
 	// Session routes
 	protected.POST("/sessions", sessionHandler.CreateSession)
 	protected.GET("/sessions", sessionHandler.GetUserSessions)
+	protected.GET("/sessions/calendar", sessionHandler.GetCalendarData)
 	protected.GET("/sessions/:id", sessionHandler.GetSession)
 	protected.PUT("/sessions/:id", sessionHandler.UpdateSession)
 	protected.DELETE("/sessions/:id", sessionHandler.DeleteSession)
-	
+
 	// Flavor statistics route
 	protected.GET("/flavors/stats", sessionHandler.GetFlavorStats)
 

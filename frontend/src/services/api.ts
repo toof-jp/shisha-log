@@ -8,7 +8,8 @@ import type {
   CreateSessionRequest,
   SessionsResponse,
   ErrorResponse,
-  FlavorStats
+  FlavorStats,
+  CalendarData
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -135,6 +136,14 @@ class ApiClient {
   // Flavor endpoints
   async getFlavorStats(): Promise<FlavorStats> {
     const response = await this.api.get<FlavorStats>('/flavors/stats');
+    return response.data;
+  }
+
+  // Calendar endpoints
+  async getCalendarData(year: number, month: number): Promise<CalendarData[]> {
+    const response = await this.api.get<CalendarData[]>('/sessions/calendar', {
+      params: { year, month },
+    });
     return response.data;
   }
 }

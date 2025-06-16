@@ -48,11 +48,11 @@ type CreateFlavorRequest struct {
 }
 
 type UpdateSessionRequest struct {
-	SessionDate  *time.Time              `json:"session_date"`
-	StoreName    *string                 `json:"store_name"`
-	Notes        *string                 `json:"notes"`
-	OrderDetails *string                 `json:"order_details"`
-	MixName      *string                 `json:"mix_name"`
-	Creator      *string                 `json:"creator"`
-	Flavors      *[]CreateFlavorRequest  `json:"flavors"`
+	SessionDate  *time.Time             `json:"session_date"`
+	StoreName    *string                `json:"store_name"`
+	Notes        *string                `json:"notes"`
+	OrderDetails *string                `json:"order_details"`
+	MixName      *string                `json:"mix_name"`
+	Creator      *string                `json:"creator"`
+	Flavors      *[]CreateFlavorRequest `json:"flavors"`
 }

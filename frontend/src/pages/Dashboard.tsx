@@ -6,6 +6,7 @@ import type { ShishaSession, FlavorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
 import { FlavorChart } from '../components/FlavorChart';
 import { FlavorRanking } from '../components/FlavorRanking';
+import { SessionCalendar } from '../components/SessionCalendar';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export const Dashboard: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'statistics'>('calendar');
 
   useEffect(() => {
     fetchRecentSessions();
@@ -159,46 +161,79 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Flavor Statistics Section */}
-      {flavorStats && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
-          
-          {/* Main Flavors */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FlavorRanking 
-                data={flavorStats.main_flavors} 
-                title="TOP 10 メインフレーバー" 
-              />
-              <div className="bg-white shadow rounded-lg p-6">
-                <FlavorChart 
-                  data={flavorStats.main_flavors.slice(0, 5)} 
-                  title="メインフレーバー構成比" 
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* All Flavors */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FlavorRanking 
-                data={flavorStats.all_flavors} 
-                title="TOP 10 全フレーバー" 
-              />
-              <div className="bg-white shadow rounded-lg p-6">
-                <FlavorChart 
-                  data={flavorStats.all_flavors.slice(0, 5)} 
-                  title="全フレーバー構成比" 
-                />
-              </div>
-            </div>
-          </div>
+      {/* Tabs Section */}
+      <div className="mt-8">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('calendar')}
+              className={`${
+                activeTab === 'calendar'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              カレンダー
+            </button>
+            <button
+              onClick={() => setActiveTab('statistics')}
+              className={`${
+                activeTab === 'statistics'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              統計
+            </button>
+          </nav>
         </div>
-      )}
+
+        <div className="mt-6">
+          {activeTab === 'calendar' ? (
+            <SessionCalendar />
+          ) : (
+            flavorStats && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
+                
+                {/* Main Flavors */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <FlavorRanking 
+                      data={flavorStats.main_flavors} 
+                      title="TOP 10 メインフレーバー" 
+                    />
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <FlavorChart 
+                        data={flavorStats.main_flavors.slice(0, 5)} 
+                        title="メインフレーバー構成比" 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* All Flavors */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <FlavorRanking 
+                      data={flavorStats.all_flavors} 
+                      title="TOP 10 全フレーバー" 
+                    />
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <FlavorChart 
+                        data={flavorStats.all_flavors.slice(0, 5)} 
+                        title="全フレーバー構成比" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </div>
     </div>
   );
 };

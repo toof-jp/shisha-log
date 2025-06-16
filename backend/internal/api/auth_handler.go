@@ -32,8 +32,8 @@ func NewAuthHandler(
 // Register handles user registration
 func (h *AuthHandler) Register(c echo.Context) error {
 	var req struct {
-		UserID      string `json:"user_id" validate:"required,min=3,max=30"`
-		Password    string `json:"password" validate:"required,min=8"`
+		UserID   string `json:"user_id" validate:"required,min=3,max=30"`
+		Password string `json:"password" validate:"required,min=8"`
 	}
 
 	if err := c.Bind(&req); err != nil {

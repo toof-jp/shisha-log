@@ -72,6 +72,11 @@ export interface SessionsResponse {
   offset: number;
 }
 
+export interface CalendarData {
+  date: string;
+  count: number;
+}
+
 export interface ErrorResponse {
   error: string;
 }

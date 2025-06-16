@@ -16,7 +16,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	s := string(b)
 	// Remove quotes
 	s = s[1 : len(s)-1]
-	
+
 	// Try parsing different formats
 	formats := []string{
 		time.RFC3339,
@@ -26,7 +26,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 		"2006-01-02T15:04:05Z",
 		"2006-01-02T15:04:05",
 	}
-	
+
 	var err error
 	for _, format := range formats {
 		ct.Time, err = time.Parse(format, s)
@@ -34,7 +34,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("could not parse time: %s", s)
 }
 

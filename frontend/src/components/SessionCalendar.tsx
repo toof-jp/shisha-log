@@ -4,9 +4,10 @@ import type { CalendarData } from '../types/api';
 
 interface SessionCalendarProps {
   currentDate?: Date;
+  onDateClick?: (date: string) => void;
 }
 
-export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = new Date() }) => {
+export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = new Date(), onDateClick }) => {
   const [calendarData, setCalendarData] = useState<CalendarData[]>([]);
   const [displayDate, setDisplayDate] = useState(currentDate);
   const [loading, setLoading] = useState(true);
@@ -64,28 +65,36 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = 
         new Date().getMonth() === month &&
         new Date().getDate() === day;
 
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
       days.push(
         <div
           key={day}
-          className={`h-24 border p-2 ${
+          onClick={() => count > 0 && onDateClick && onDateClick(dateStr)}
+          className={`h-24 border relative ${
             isToday ? 'bg-blue-50 border-blue-500' : 'bg-white border-gray-200'
-          } ${count > 0 ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+          } ${count > 0 ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
         >
-          <div className="flex justify-between items-start">
-            <span className={`text-sm ${isToday ? 'font-bold text-blue-600' : 'text-gray-700'}`}>
+          <div className="absolute top-1 left-2">
+            <span className={`text-xs ${isToday ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
               {day}
             </span>
-            {count > 0 && (
-              <span className="bg-indigo-600 text-white text-xs font-bold rounded-full px-2 py-1">
-                {count}
-              </span>
-            )}
           </div>
-          {count > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-gray-600">
-                {count === 1 ? '1回' : `${count}回`}
-              </p>
+          
+          {count > 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600">
+                  {count}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {count === 1 ? 'セッション' : 'セッション'}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <span className="text-2xl text-gray-300">{day}</span>
             </div>
           )}
         </div>

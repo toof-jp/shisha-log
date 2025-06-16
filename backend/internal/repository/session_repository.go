@@ -479,3 +479,101 @@ func (r *SessionRepository) GetCalendarData(ctx context.Context, userID string, 
 
 	return calendarData, nil
 }
+
+func (r *SessionRepository) GetByDate(ctx context.Context, userID string, date string) ([]models.SessionWithFlavors, error) {
+	// Parse the date to ensure it's valid
+	dateOnly, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set time range for the entire day in UTC
+	startTime := dateOnly.UTC()
+	endTime := startTime.AddDate(0, 0, 1)
+
+	// Query sessions for the specific date
+	data, _, err := r.client.From("shisha_sessions").
+		Select("*", "exact", false).
+		Eq("user_id", userID).
+		Gte("session_date", startTime.Format(time.RFC3339)).
+		Lt("session_date", endTime.Format(time.RFC3339)).
+		Order("session_date", nil). // nil uses default options (descending)
+		Execute()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var sessions []models.ShishaSession
+	if err := json.Unmarshal(data, &sessions); err != nil {
+		return nil, err
+	}
+
+	// Fetch flavors for each session
+	var sessionsWithFlavors []models.SessionWithFlavors
+	for _, session := range sessions {
+		sessionWithFlavors := models.SessionWithFlavors{ShishaSession: session}
+
+		// Fetch flavors
+		flavorData, _, err := r.client.From("session_flavors").
+			Select("*", "exact", false).
+			Eq("session_id", session.ID).
+			Order("flavor_order", nil). // Order by flavor_order ascending (default)
+			Execute()
+
+		if err == nil {
+			var flavors []models.SessionFlavor
+			if err := json.Unmarshal(flavorData, &flavors); err == nil {
+				sessionWithFlavors.Flavors = flavors
+			}
+		}
+
+		sessionsWithFlavors = append(sessionsWithFlavors, sessionWithFlavors)
+	}
+
+	return sessionsWithFlavors, nil
+}
+
+func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, startTime string, endTime string) ([]models.SessionWithFlavors, error) {
+	// Query sessions for the specific date range
+	data, _, err := r.client.From("shisha_sessions").
+		Select("*", "exact", false).
+		Eq("user_id", userID).
+		Gte("session_date", startTime).
+		Lte("session_date", endTime).
+		Order("session_date", nil). // nil uses default options (descending)
+		Execute()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var sessions []models.ShishaSession
+	if err := json.Unmarshal(data, &sessions); err != nil {
+		return nil, err
+	}
+
+	// Fetch flavors for each session
+	var sessionsWithFlavors []models.SessionWithFlavors
+	for _, session := range sessions {
+		sessionWithFlavors := models.SessionWithFlavors{ShishaSession: session}
+
+		// Fetch flavors
+		flavorData, _, err := r.client.From("session_flavors").
+			Select("*", "exact", false).
+			Eq("session_id", session.ID).
+			Order("flavor_order", nil). // Order by flavor_order ascending (default)
+			Execute()
+
+		if err == nil {
+			var flavors []models.SessionFlavor
+			if err := json.Unmarshal(flavorData, &flavors); err == nil {
+				sessionWithFlavors.Flavors = flavors
+			}
+		}
+
+		sessionsWithFlavors = append(sessionsWithFlavors, sessionWithFlavors)
+	}
+
+	return sessionsWithFlavors, nil
+}

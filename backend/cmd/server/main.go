@@ -115,6 +115,7 @@ func main() {
 	protected.POST("/sessions", sessionHandler.CreateSession)
 	protected.GET("/sessions", sessionHandler.GetUserSessions)
 	protected.GET("/sessions/calendar", sessionHandler.GetCalendarData)
+	protected.GET("/sessions/by-date", sessionHandler.GetSessionsByDate)
 	protected.GET("/sessions/:id", sessionHandler.GetSession)
 	protected.PUT("/sessions/:id", sessionHandler.UpdateSession)
 	protected.DELETE("/sessions/:id", sessionHandler.DeleteSession)

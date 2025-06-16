@@ -77,6 +77,11 @@ export interface CalendarData {
   count: number;
 }
 
+export interface SessionsByDateResponse {
+  sessions: ShishaSession[];
+  date: string;
+}
+
 export interface ErrorResponse {
   error: string;
 }

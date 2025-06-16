@@ -410,6 +410,84 @@ Gets flavor usage statistics for the authenticated user.
 - Results are sorted by count in descending order
 - Limited to top 10 flavors for each category
 
+### Calendar Endpoints (Protected)
+
+#### Get Calendar Data
+```
+GET /api/v1/sessions/calendar?year=2025&month=6&timezone=Asia/Tokyo
+```
+
+Gets session counts per day for a specific month, calculated in the user's timezone.
+
+**Query Parameters**
+- `year` (required): Year (e.g., 2025)
+- `month` (required): Month (1-12)
+- `timezone` (optional): IANA timezone identifier (e.g., "Asia/Tokyo", "America/New_York"). Defaults to "UTC" if not provided.
+
+**Response**
+```json
+[
+  {
+    "date": "2025-06-01",
+    "count": 2
+  },
+  {
+    "date": "2025-06-15",
+    "count": 1
+  },
+  {
+    "date": "2025-06-20",
+    "count": 3
+  }
+]
+```
+
+**Notes:**
+- Session counts are calculated based on the session date in the specified timezone
+- The `date` field in the response represents the date in the user's timezone
+- Sessions that occur near midnight may appear on different days depending on the timezone
+
+#### Get Sessions by Date
+```
+GET /api/v1/sessions/by-date?date=2025-06-15
+```
+
+Gets all sessions for a specific date.
+
+**Query Parameters**
+- `date` (required): Date in YYYY-MM-DD format
+
+**Response**
+```json
+{
+  "date": "2025-06-15",
+  "sessions": [
+    {
+      "id": "session-uuid",
+      "user_id": "user-uuid",
+      "created_by": "user-uuid",
+      "session_date": "2025-06-15T20:00:00Z",
+      "store_name": "Cloud 9 Lounge",
+      "mix_name": "Tropical Mix",
+      "creator": "Staff",
+      "flavors": [
+        {
+          "id": "flavor-uuid",
+          "session_id": "session-uuid",
+          "flavor_name": "Mango",
+          "brand": "Al Fakher",
+          "flavor_order": 1
+        }
+      ],
+      "notes": "Summer special",
+      "order_details": "Table 3",
+      "created_at": "2025-06-15T00:00:00Z",
+      "updated_at": "2025-06-15T00:00:00Z"
+    }
+  ]
+}
+```
+
 ## Error Responses
 
 All endpoints may return error responses in the following format:

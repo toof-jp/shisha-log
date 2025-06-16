@@ -150,7 +150,7 @@ docker-build:
 		--build-arg VERSION=$(VERSION) \
 		-t shisha-log .
 
-docker-run:
+docker-run: update-ecr-password
 	docker run --env-file .env -p 8080:8080 shisha-log
 
 docker-push:

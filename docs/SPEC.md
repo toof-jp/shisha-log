@@ -72,6 +72,8 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - `GET /api/v1/sessions/:id` - Get session details
 - `PUT /api/v1/sessions/:id` - Update session
 - `DELETE /api/v1/sessions/:id` - Delete session
+- `GET /api/v1/sessions/calendar` - Get sessions for calendar view (month/year)
+- `GET /api/v1/sessions/by-date` - Get sessions for a specific date
 
 #### Flavors
 - `GET /api/v1/flavors/stats` - Get flavor usage statistics
@@ -142,6 +144,8 @@ interface FlavorStats {
    - List of recent sessions
    - Total session count
    - Flavor statistics with rankings and pie charts
+   - Calendar view with session indicators
+   - Tabbed interface for Calendar/Statistics views
 5. **Session List**: Full paginated list of sessions
 6. **Session Detail**: View/edit individual session
 7. **New Session**: Form to create new session
@@ -154,6 +158,13 @@ interface FlavorStats {
 - **Multi-select**: For flavor selection
 - **Flavor Chart**: Pie chart visualization of flavor usage
 - **Flavor Ranking**: List view of most popular flavors with progress bars
+- **Session Calendar**: Monthly calendar view showing days with sessions
+  - Visual indicators (dots) for days with sessions
+  - Click on date to view sessions for that day
+  - Modal popup showing daily session details
+- **Daily Sessions Modal**: Displays all sessions for a selected date
+  - Session time, store name, and flavors
+  - Links to individual session details
 
 ### 4.3 Design Principles
 - Mobile-first responsive design

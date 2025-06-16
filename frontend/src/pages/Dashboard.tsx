@@ -7,6 +7,7 @@ import { formatDateTime } from '../utils/dateFormat';
 import { FlavorChart } from '../components/FlavorChart';
 import { FlavorRanking } from '../components/FlavorRanking';
 import { SessionCalendar } from '../components/SessionCalendar';
+import { DailySessionsModal } from '../components/DailySessionsModal';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'calendar' | 'statistics'>('calendar');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchRecentSessions();
@@ -190,7 +193,12 @@ export const Dashboard: React.FC = () => {
 
         <div className="mt-6">
           {activeTab === 'calendar' ? (
-            <SessionCalendar />
+            <SessionCalendar 
+              onDateClick={(date) => {
+                setSelectedDate(date);
+                setIsModalOpen(true);
+              }}
+            />
           ) : (
             flavorStats && (
               <div>
@@ -234,6 +242,13 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* Daily Sessions Modal */}
+      <DailySessionsModal
+        date={selectedDate}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

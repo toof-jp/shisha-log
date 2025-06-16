@@ -188,9 +188,15 @@ func (h *SessionHandler) GetFlavorStats(c echo.Context) error {
 func (h *SessionHandler) GetCalendarData(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
-	// Get year and month from query parameters
+	// Get year, month, and timezone from query parameters
 	yearStr := c.QueryParam("year")
 	monthStr := c.QueryParam("month")
+	timezone := c.QueryParam("timezone")
+
+	// Default to UTC if no timezone provided
+	if timezone == "" {
+		timezone = "UTC"
+	}
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
@@ -202,11 +208,45 @@ func (h *SessionHandler) GetCalendarData(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid month parameter"})
 	}
 
-	calendarData, err := h.repo.GetCalendarData(c.Request().Context(), userID, year, month)
+	calendarData, err := h.repo.GetCalendarDataWithTimezone(c.Request().Context(), userID, year, month, timezone)
 	if err != nil {
 		log.Printf("GetCalendarData error for user %s: %v", userID, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get calendar data"})
 	}
 
 	return c.JSON(http.StatusOK, calendarData)
+}
+
+func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+	dateStr := c.QueryParam("date")
+	startStr := c.QueryParam("start")
+	endStr := c.QueryParam("end")
+
+	if dateStr == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Date parameter is required"})
+	}
+
+	var sessions []models.SessionWithFlavors
+	var err error
+
+	// If start and end are provided, use them for more precise filtering
+	if startStr != "" && endStr != "" {
+		sessions, err = h.repo.GetByDateRange(c.Request().Context(), userID, startStr, endStr)
+	} else {
+		// Fallback to date-only query
+		sessions, err = h.repo.GetByDate(c.Request().Context(), userID, dateStr)
+	}
+
+	if err != nil {
+		log.Printf("GetSessionsByDate error for user %s, date %s: %v", userID, dateStr, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get sessions"})
+	}
+
+	response := map[string]interface{}{
+		"sessions": sessions,
+		"date":     dateStr,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }

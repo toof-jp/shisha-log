@@ -9,7 +9,8 @@ import type {
   SessionsResponse,
   ErrorResponse,
   FlavorStats,
-  CalendarData
+  CalendarData,
+  SessionsByDateResponse
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -141,8 +142,26 @@ class ApiClient {
 
   // Calendar endpoints
   async getCalendarData(year: number, month: number): Promise<CalendarData[]> {
+    // Get user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     const response = await this.api.get<CalendarData[]>('/sessions/calendar', {
-      params: { year, month },
+      params: { year, month, timezone },
+    });
+    return response.data;
+  }
+
+  async getSessionsByDate(date: string): Promise<SessionsByDateResponse> {
+    // Convert local date to UTC range
+    const startDate = new Date(date + 'T00:00:00');
+    const endDate = new Date(date + 'T23:59:59.999');
+    
+    const response = await this.api.get<SessionsByDateResponse>('/sessions/by-date', {
+      params: { 
+        date,
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      },
     });
     return response.data;
   }

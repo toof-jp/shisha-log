@@ -81,7 +81,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = 
             </span>
           </div>
           
-          {count > 0 ? (
+          {count > 0 && (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <div className="text-3xl font-bold text-indigo-600">
@@ -91,10 +91,6 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = 
                   {count === 1 ? 'セッション' : 'セッション'}
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <span className="text-2xl text-gray-300">{day}</span>
             </div>
           )}
         </div>

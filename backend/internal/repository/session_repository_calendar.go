@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"sort"
 	"time"
 
@@ -15,11 +14,8 @@ func (r *SessionRepository) GetCalendarDataWithTimezone(ctx context.Context, use
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
 		// Fallback to UTC if timezone is invalid
-		log.Printf("Failed to load timezone %s: %v, falling back to UTC", timezone, err)
 		loc = time.UTC
 	}
-	
-	log.Printf("GetCalendarDataWithTimezone: year=%d, month=%d, timezone=%s", year, month, timezone)
 
 	// Calculate start and end dates for the month in the specified timezone
 	startDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, loc)
@@ -57,31 +53,21 @@ func (r *SessionRepository) GetCalendarDataWithTimezone(ctx context.Context, use
 	// Count sessions by date in the user's timezone
 	dateCount := make(map[string]int)
 	
-	log.Printf("Found %d sessions to process", len(sessions))
-	
 	for _, session := range sessions {
 		// Parse the session date
 		sessionTime, err := time.Parse(time.RFC3339, session.SessionDate)
 		if err != nil {
-			log.Printf("Failed to parse session date %s: %v", session.SessionDate, err)
 			continue
 		}
 
 		// Convert to user's timezone
 		localTime := sessionTime.In(loc)
-		
-		log.Printf("Session %s: UTC=%s, Local(%s)=%s", 
-			session.ID[:8], 
-			sessionTime.Format("2006-01-02 15:04:05"), 
-			timezone,
-			localTime.Format("2006-01-02 15:04:05"))
 
 		// Check if this session falls within the requested month
 		if localTime.Year() == year && int(localTime.Month()) == month {
 			// Format date as YYYY-MM-DD in user's timezone
 			dateStr := localTime.Format("2006-01-02")
 			dateCount[dateStr]++
-			log.Printf("Added session to date %s (count=%d)", dateStr, dateCount[dateStr])
 		}
 	}
 

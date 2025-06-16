@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
 import { formatDateTime, formatDate } from '../utils/dateFormat';
+import { sortFlavorsByOrder } from '../utils/flavorSort';
 
 interface DailySessionsModalProps {
   date: string;
@@ -93,7 +94,7 @@ export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({ date, is
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1">
                             {session.flavors && session.flavors.length > 0 ? (
-                              session.flavors.map((flavor, index) => (
+                              sortFlavorsByOrder(session.flavors).map((flavor, index) => (
                                 <span
                                   key={index}
                                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"

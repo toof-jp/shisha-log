@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
+import { sortFlavorsByOrder } from '../utils/flavorSort';
 
 export const Sessions: React.FC = () => {
   const [sessions, setSessions] = useState<ShishaSession[]>([]);
@@ -172,7 +173,7 @@ export const Sessions: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="flex flex-wrap gap-1 max-w-xs">
                         {session.flavors && session.flavors.length > 0 ? (
-                          session.flavors.map((flavor, index) => (
+                          sortFlavorsByOrder(session.flavors).map((flavor, index) => (
                             <span
                               key={index}
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"

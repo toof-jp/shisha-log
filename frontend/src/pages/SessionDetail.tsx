@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
+import { sortFlavorsByOrder } from '../utils/flavorSort';
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +132,7 @@ export const SessionDetail: React.FC = () => {
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <div className="flex flex-wrap gap-2">
                   {session.flavors && session.flavors.length > 0 ? (
-                    session.flavors.map((flavor, index) => (
+                    sortFlavorsByOrder(session.flavors).map((flavor, index) => (
                       <div
                         key={index}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"

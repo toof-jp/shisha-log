@@ -8,6 +8,7 @@ import { FlavorChart } from '../components/FlavorChart';
 import { FlavorRanking } from '../components/FlavorRanking';
 import { SessionCalendar } from '../components/SessionCalendar';
 import { DailySessionsModal } from '../components/DailySessionsModal';
+import { sortFlavorsByOrder } from '../utils/flavorSort';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -120,7 +121,7 @@ export const Dashboard: React.FC = () => {
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {session.flavors && session.flavors.length > 0 ? (
-                          session.flavors.map((flavor, index) => (
+                          sortFlavorsByOrder(session.flavors).map((flavor, index) => (
                             <span
                               key={index}
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"

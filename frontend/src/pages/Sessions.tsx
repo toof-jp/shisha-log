@@ -99,7 +99,7 @@ export const Sessions: React.FC = () => {
                 <div className="mt-3">
                   <div className="flex flex-wrap gap-1">
                     {session.flavors && session.flavors.length > 0 ? (
-                      session.flavors.map((flavor, index) => (
+                      sortFlavorsByOrder(session.flavors).map((flavor, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"

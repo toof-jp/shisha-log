@@ -540,7 +540,7 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 		Select("*", "exact", false).
 		Eq("user_id", userID).
 		Gte("session_date", startTime).
-		Lte("session_date", endTime).
+		Lt("session_date", endTime).
 		Order("session_date", nil). // nil uses default options (descending)
 		Execute()
 

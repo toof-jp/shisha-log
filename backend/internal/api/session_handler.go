@@ -254,11 +254,6 @@ func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 	// Convert to UTC for database query
 	startUTC := startLocal.UTC()
 	endUTC := endLocal.UTC()
-	
-	// Debug logging
-	log.Printf("GetSessionsByDate: date=%s, timezone=%s", dateStr, timezone)
-	log.Printf("Local range: %s to %s", startLocal.Format("2006-01-02 15:04:05"), endLocal.Format("2006-01-02 15:04:05"))
-	log.Printf("UTC range: %s to %s", startUTC.Format("2006-01-02 15:04:05"), endUTC.Format("2006-01-02 15:04:05"))
 
 	// Get sessions in the UTC range
 	sessions, err := h.repo.GetByDateRange(c.Request().Context(), userID, startUTC.Format(time.RFC3339), endUTC.Format(time.RFC3339))

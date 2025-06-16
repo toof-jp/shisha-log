@@ -10,7 +10,9 @@ import type {
   ErrorResponse,
   FlavorStats,
   CalendarData,
-  SessionsByDateResponse
+  SessionsByDateResponse,
+  StoreStats,
+  CreatorStats
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -161,6 +163,16 @@ class ApiClient {
         timezone
       },
     });
+    return response.data;
+  }
+
+  async getStoreStats(): Promise<StoreStats> {
+    const response = await this.api.get<StoreStats>('/stores/stats');
+    return response.data;
+  }
+
+  async getCreatorStats(): Promise<CreatorStats> {
+    const response = await this.api.get<CreatorStats>('/creators/stats');
     return response.data;
   }
 }

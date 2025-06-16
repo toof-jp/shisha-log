@@ -269,3 +269,27 @@ func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *SessionHandler) GetStoreStats(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	stats, err := h.repo.GetStoreStats(c.Request().Context(), userID)
+	if err != nil {
+		log.Printf("GetStoreStats error for user %s: %v", userID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get store statistics"})
+	}
+
+	return c.JSON(http.StatusOK, stats)
+}
+
+func (h *SessionHandler) GetCreatorStats(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	stats, err := h.repo.GetCreatorStats(c.Request().Context(), userID)
+	if err != nil {
+		log.Printf("GetCreatorStats error for user %s: %v", userID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get creator statistics"})
+	}
+
+	return c.JSON(http.StatusOK, stats)
+}

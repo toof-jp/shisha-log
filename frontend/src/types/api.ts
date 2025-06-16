@@ -85,3 +85,21 @@ export interface SessionsByDateResponse {
 export interface ErrorResponse {
   error: string;
 }
+
+export interface StoreCount {
+  store_name: string;
+  count: number;
+}
+
+export interface CreatorCount {
+  creator: string;
+  count: number;
+}
+
+export interface StoreStats {
+  stores: StoreCount[];
+}
+
+export interface CreatorStats {
+  creators: CreatorCount[];
+}

@@ -2,18 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
-import type { ShishaSession, FlavorStats } from '../types/api';
+import type { ShishaSession, FlavorStats, StoreStats, CreatorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
 import { FlavorChart } from '../components/FlavorChart';
 import { FlavorRanking } from '../components/FlavorRanking';
 import { SessionCalendar } from '../components/SessionCalendar';
 import { DailySessionsModal } from '../components/DailySessionsModal';
 import { sortFlavorsByOrder } from '../utils/flavorSort';
+import { StoreChart } from '../components/StoreChart';
+import { StoreRanking } from '../components/StoreRanking';
+import { CreatorChart } from '../components/CreatorChart';
+import { CreatorRanking } from '../components/CreatorRanking';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [recentSessions, setRecentSessions] = useState<ShishaSession[]>([]);
   const [flavorStats, setFlavorStats] = useState<FlavorStats | null>(null);
+  const [storeStats, setStoreStats] = useState<StoreStats | null>(null);
+  const [creatorStats, setCreatorStats] = useState<CreatorStats | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -29,16 +35,20 @@ export const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch recent sessions and flavor stats in parallel
-      const [sessionsResponse, flavorStatsData] = await Promise.all([
+      // Fetch recent sessions and all stats in parallel
+      const [sessionsResponse, flavorStatsData, storeStatsData, creatorStatsData] = await Promise.all([
         apiClient.getSessions(5, 0),
-        apiClient.getFlavorStats()
+        apiClient.getFlavorStats(),
+        apiClient.getStoreStats(),
+        apiClient.getCreatorStats()
       ]);
       
       console.log('Dashboard sessions response:', sessionsResponse);
       setRecentSessions(sessionsResponse.sessions || []);
       setTotalCount(sessionsResponse.total || 0);
       setFlavorStats(flavorStatsData);
+      setStoreStats(storeStatsData);
+      setCreatorStats(creatorStatsData);
     } catch (err) {
       setError('データの読み込みに失敗しました');
       console.error('Dashboard error:', err);
@@ -201,45 +211,86 @@ export const Dashboard: React.FC = () => {
               }}
             />
           ) : (
-            flavorStats && (
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
-                
-                {/* Main Flavors */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <FlavorRanking 
-                      data={flavorStats.main_flavors} 
-                      title="TOP 10 メインフレーバー" 
-                    />
-                    <div className="bg-white shadow rounded-lg p-6">
-                      <FlavorChart 
-                        data={flavorStats.main_flavors.slice(0, 5)} 
-                        title="メインフレーバー構成比" 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* All Flavors */}
+            <div className="space-y-12">
+              {/* Flavor Statistics */}
+              {flavorStats && (
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
+                  
+                  {/* Main Flavors */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <FlavorRanking 
+                        data={flavorStats.main_flavors} 
+                        title="TOP 10 メインフレーバー" 
+                      />
+                      <div className="bg-white shadow rounded-lg p-6">
+                        <FlavorChart 
+                          data={flavorStats.main_flavors.slice(0, 5)} 
+                          title="メインフレーバー構成比" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All Flavors */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <FlavorRanking 
+                        data={flavorStats.all_flavors} 
+                        title="TOP 10 全フレーバー" 
+                      />
+                      <div className="bg-white shadow rounded-lg p-6">
+                        <FlavorChart 
+                          data={flavorStats.all_flavors.slice(0, 5)} 
+                          title="全フレーバー構成比" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Store Statistics */}
+              {storeStats && (
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗統計</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <FlavorRanking 
-                      data={flavorStats.all_flavors} 
-                      title="TOP 10 全フレーバー" 
+                    <StoreRanking 
+                      stores={storeStats.stores} 
+                      title="TOP 10 店舗" 
                     />
                     <div className="bg-white shadow rounded-lg p-6">
-                      <FlavorChart 
-                        data={flavorStats.all_flavors.slice(0, 5)} 
-                        title="全フレーバー構成比" 
+                      <StoreChart 
+                        stores={storeStats.stores.slice(0, 5)} 
+                        title="店舗別訪問構成比" 
                       />
                     </div>
                   </div>
                 </div>
-              </div>
-            )
+              )}
+
+              {/* Creator Statistics */}
+              {creatorStats && (
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者統計</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <CreatorRanking 
+                      creators={creatorStats.creators} 
+                      title="TOP 10 作成者" 
+                    />
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <CreatorChart 
+                        creators={creatorStats.creators.slice(0, 5)} 
+                        title="作成者別構成比" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

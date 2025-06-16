@@ -604,3 +604,89 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 
 	return sessionsWithFlavors, nil
 }
+
+func (r *SessionRepository) GetStoreStats(ctx context.Context, userID string) (*models.StoreStats, error) {
+	// Get all sessions for the user
+	sessions, err := r.GetByUserID(ctx, userID, 10000, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Count sessions by store
+	storeMap := make(map[string]int)
+	for _, session := range sessions {
+		storeName := ""
+		if session.StoreName != nil && *session.StoreName != "" {
+			storeName = *session.StoreName
+		} else {
+			storeName = "店舗名なし"
+		}
+		storeMap[storeName]++
+	}
+
+	// Convert to sorted slice
+	stores := make([]models.StoreCount, 0, len(storeMap))
+	for name, count := range storeMap {
+		stores = append(stores, models.StoreCount{
+			StoreName: name,
+			Count:     count,
+		})
+	}
+
+	// Sort by count descending
+	sort.Slice(stores, func(i, j int) bool {
+		return stores[i].Count > stores[j].Count
+	})
+
+	// Limit to top 10
+	if len(stores) > 10 {
+		stores = stores[:10]
+	}
+
+	return &models.StoreStats{
+		Stores: stores,
+	}, nil
+}
+
+func (r *SessionRepository) GetCreatorStats(ctx context.Context, userID string) (*models.CreatorStats, error) {
+	// Get all sessions for the user
+	sessions, err := r.GetByUserID(ctx, userID, 10000, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Count sessions by creator
+	creatorMap := make(map[string]int)
+	for _, session := range sessions {
+		creator := ""
+		if session.Creator != nil && *session.Creator != "" {
+			creator = *session.Creator
+		} else {
+			creator = "作成者なし"
+		}
+		creatorMap[creator]++
+	}
+
+	// Convert to sorted slice
+	creators := make([]models.CreatorCount, 0, len(creatorMap))
+	for name, count := range creatorMap {
+		creators = append(creators, models.CreatorCount{
+			Creator: name,
+			Count:   count,
+		})
+	}
+
+	// Sort by count descending
+	sort.Slice(creators, func(i, j int) bool {
+		return creators[i].Count > creators[j].Count
+	})
+
+	// Limit to top 10
+	if len(creators) > 10 {
+		creators = creators[:10]
+	}
+
+	return &models.CreatorStats{
+		Creators: creators,
+	}, nil
+}

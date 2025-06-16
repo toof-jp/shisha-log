@@ -56,3 +56,21 @@ type UpdateSessionRequest struct {
 	Creator      *string                `json:"creator"`
 	Flavors      *[]CreateFlavorRequest `json:"flavors"`
 }
+
+type StoreCount struct {
+	StoreName string `json:"store_name"`
+	Count     int    `json:"count"`
+}
+
+type CreatorCount struct {
+	Creator string `json:"creator"`
+	Count   int    `json:"count"`
+}
+
+type StoreStats struct {
+	Stores []StoreCount `json:"stores"`
+}
+
+type CreatorStats struct {
+	Creators []CreatorCount `json:"creators"`
+}

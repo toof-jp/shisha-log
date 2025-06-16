@@ -122,6 +122,10 @@ func main() {
 
 	// Flavor statistics route
 	protected.GET("/flavors/stats", sessionHandler.GetFlavorStats)
+	
+	// Store and creator statistics routes
+	protected.GET("/stores/stats", sessionHandler.GetStoreStats)
+	protected.GET("/creators/stats", sessionHandler.GetCreatorStats)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

@@ -78,6 +78,12 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 #### Flavors
 - `GET /api/v1/flavors/stats` - Get flavor usage statistics
 
+#### Stores
+- `GET /api/v1/stores/stats` - Get store visit statistics
+
+#### Creators
+- `GET /api/v1/creators/stats` - Get creator/mixer statistics
+
 ### 3.3 Data Models
 
 #### User
@@ -134,6 +140,36 @@ interface FlavorStats {
 }
 ```
 
+#### StoreCount
+```typescript
+interface StoreCount {
+  store_name: string;
+  count: number;
+}
+```
+
+#### StoreStats
+```typescript
+interface StoreStats {
+  stores: StoreCount[];  // Stores sorted by visit count
+}
+```
+
+#### CreatorCount
+```typescript
+interface CreatorCount {
+  creator: string;
+  count: number;
+}
+```
+
+#### CreatorStats
+```typescript
+interface CreatorStats {
+  creators: CreatorCount[];  // Creators sorted by session count
+}
+```
+
 ## 4. User Interface
 
 ### 4.1 Pages
@@ -143,7 +179,10 @@ interface FlavorStats {
 4. **Dashboard**: 
    - List of recent sessions
    - Total session count
-   - Flavor statistics with rankings and pie charts
+   - Statistics tab with:
+     - Flavor statistics with rankings and pie charts
+     - Store statistics with rankings and pie charts
+     - Creator statistics with rankings and pie charts
    - Calendar view with session indicators
    - Tabbed interface for Calendar/Statistics views
 5. **Session List**: Full paginated list of sessions
@@ -158,6 +197,10 @@ interface FlavorStats {
 - **Multi-select**: For flavor selection
 - **Flavor Chart**: Pie chart visualization of flavor usage
 - **Flavor Ranking**: List view of most popular flavors with progress bars
+- **Store Chart**: Pie chart visualization of store visits
+- **Store Ranking**: List view of most visited stores with progress bars
+- **Creator Chart**: Pie chart visualization of creators/mixers
+- **Creator Ranking**: List view of most frequent creators with progress bars
 - **Session Calendar**: Monthly calendar view showing days with sessions
   - Visual indicators (dots) for days with sessions
   - Click on date to view sessions for that day

@@ -215,7 +215,7 @@ export const Dashboard: React.FC = () => {
                   
                   {/* Main Flavors */}
                   <div className="mb-8">
-                    <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（1番目）ランキング</h3>
+                    <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（オーダー1）ランキング</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <StatisticsRanking 
                         data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 

@@ -362,18 +362,18 @@ func (r *SessionRepository) GetFlavorStats(ctx context.Context, userID string) (
 		return nil, err
 	}
 
-	// Count main flavors (first flavor of each session)
+	// Count main flavors (flavor_order = 1) and all flavors
 	mainFlavorMap := make(map[string]int)
 	allFlavorMap := make(map[string]int)
 
 	for _, session := range sessions {
-		for i, flavor := range session.Flavors {
+		for _, flavor := range session.Flavors {
 			if flavor.FlavorName != nil && *flavor.FlavorName != "" {
 				// Count all flavors
 				allFlavorMap[*flavor.FlavorName]++
 
-				// Count only main flavors (first one)
-				if i == 0 {
+				// Count only main flavors (flavor_order = 1)
+				if flavor.FlavorOrder == 1 {
 					mainFlavorMap[*flavor.FlavorName]++
 				}
 			}

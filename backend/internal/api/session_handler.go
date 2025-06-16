@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/toof-jp/shisha-log/backend/internal/models"
@@ -220,24 +221,40 @@ func (h *SessionHandler) GetCalendarData(c echo.Context) error {
 func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 	dateStr := c.QueryParam("date")
-	startStr := c.QueryParam("start")
-	endStr := c.QueryParam("end")
+	timezone := c.QueryParam("timezone")
 
 	if dateStr == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Date parameter is required"})
 	}
 
-	var sessions []models.SessionWithFlavors
-	var err error
-
-	// If start and end are provided, use them for more precise filtering
-	if startStr != "" && endStr != "" {
-		sessions, err = h.repo.GetByDateRange(c.Request().Context(), userID, startStr, endStr)
-	} else {
-		// Fallback to date-only query
-		sessions, err = h.repo.GetByDate(c.Request().Context(), userID, dateStr)
+	// Default to UTC if no timezone provided
+	if timezone == "" {
+		timezone = "UTC"
 	}
 
+	// Load the timezone
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		// Fallback to UTC if timezone is invalid
+		loc = time.UTC
+	}
+
+	// Parse the date and create start/end times in the user's timezone
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid date format. Use YYYY-MM-DD"})
+	}
+
+	// Create start and end times in the user's timezone
+	startLocal := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+	endLocal := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, loc)
+
+	// Convert to UTC for database query
+	startUTC := startLocal.UTC()
+	endUTC := endLocal.UTC()
+
+	// Get sessions in the UTC range
+	sessions, err := h.repo.GetByDateRange(c.Request().Context(), userID, startUTC.Format(time.RFC3339), endUTC.Format(time.RFC3339))
 	if err != nil {
 		log.Printf("GetSessionsByDate error for user %s, date %s: %v", userID, dateStr, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get sessions"})

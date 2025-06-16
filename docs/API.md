@@ -449,13 +449,14 @@ Gets session counts per day for a specific month, calculated in the user's timez
 
 #### Get Sessions by Date
 ```
-GET /api/v1/sessions/by-date?date=2025-06-15
+GET /api/v1/sessions/by-date?date=2025-06-15&timezone=Asia/Tokyo
 ```
 
-Gets all sessions for a specific date.
+Gets all sessions for a specific date, calculated in the user's timezone.
 
 **Query Parameters**
 - `date` (required): Date in YYYY-MM-DD format
+- `timezone` (optional): IANA timezone identifier (e.g., "Asia/Tokyo", "America/New_York"). Defaults to "UTC" if not provided.
 
 **Response**
 ```json
@@ -487,6 +488,11 @@ Gets all sessions for a specific date.
   ]
 }
 ```
+
+**Notes:**
+- Sessions are filtered based on the specified date in the user's timezone
+- The `session_date` in the response is still in UTC format
+- Sessions that occur near midnight may appear on different days depending on the timezone
 
 ## Error Responses
 

@@ -152,15 +152,13 @@ class ApiClient {
   }
 
   async getSessionsByDate(date: string): Promise<SessionsByDateResponse> {
-    // Convert local date to UTC range
-    const startDate = new Date(date + 'T00:00:00');
-    const endDate = new Date(date + 'T23:59:59.999');
+    // Get user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     const response = await this.api.get<SessionsByDateResponse>('/sessions/by-date', {
       params: { 
         date,
-        start: startDate.toISOString(),
-        end: endDate.toISOString()
+        timezone
       },
     });
     return response.data;

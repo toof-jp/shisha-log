@@ -12,23 +12,33 @@ Shisha Log is a full-stack application for tracking and managing shisha (hookah)
 
 ## Development Commands
 
-### Backend
-- **Install dependencies**: `cd backend && go mod download`
-- **Run development server**: `cd backend && make dev` (with hot reload) or `make run`
-- **Run tests**: `cd backend && make test`
-- **Linting/formatting**: `cd backend && make fmt && make lint`
-- **Build production**: `cd backend && make build`
+**Important**: All commands should be run from the project root directory. The Makefile handles directory navigation automatically.
 
-### Frontend
-- **Install dependencies**: `cd frontend && npm install`
-- **Start development**: `cd frontend && npm run dev`
-- **Build production**: `cd frontend && npm run build`
-- **Type check**: `cd frontend && npm run typecheck`
-- **Lint**: `cd frontend && npm run lint`
+### Backend (from root directory)
+- **Install dependencies**: `make backend-deps`
+- **Run development server**: `make backend-dev` (with hot reload) or `make backend-run`
+- **Run tests**: `make backend-test`
+- **Linting/formatting**: `make backend-fmt && make backend-lint`
+- **Build production**: `make backend-build`
+
+### Frontend (from root directory)
+- **Install dependencies**: `make frontend-install`
+- **Start development**: `make frontend-dev`
+- **Build production**: `make frontend-build`
+- **Type check**: `make frontend-typecheck` or `make typecheck`
+- **Lint**: `make frontend-lint`
+
+### Convenience Commands
+- **Build both frontend and backend**: `make build`
+- **Type check (alias)**: `make typecheck`
+- **Deploy frontend**: `make deploy-frontend`
+- **Deploy backend**: `make deploy-backend`
+- **Deploy all**: `make deploy-all`
 
 ### Infrastructure
-- **Deploy to production**: `cd infra && terraform apply -var-file=environments/prod/terraform.tfvars`
-- **Deploy to development**: `cd infra && terraform apply -var-file=environments/dev/terraform.tfvars`
+- **Initialize**: `make infra-init`
+- **Plan changes**: `make infra-plan`
+- **Apply changes**: `make infra-apply`
 
 ## Architecture Overview
 
@@ -114,6 +124,7 @@ make setup-env
 
 ## Key Development Notes
 
+- **Working Directory**: Always work from the project root directory. Use make commands instead of cd-ing into subdirectories
 - **Authentication Flow**: Users register with user_id/password, receive JWT token, profile auto-created
 - **API Integration**: All non-auth endpoints require JWT in Authorization header
 - **CORS**: Backend configured to accept requests from frontend origins

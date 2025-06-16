@@ -28,6 +28,8 @@ help:
 	@echo "  make frontend-test      - Run frontend tests"
 	@echo "  make frontend-lint      - Run frontend linter"
 	@echo "  make frontend-typecheck - Run TypeScript type checking"
+	@echo "  make typecheck          - Run TypeScript type checking (alias)"
+	@echo "  make build              - Build both frontend and backend"
 	@echo ""
 	@echo "Deployment Commands:"
 	@echo "  make deploy-frontend    - Deploy frontend to S3/CloudFront"
@@ -127,6 +129,11 @@ frontend-typecheck:
 
 frontend-clean:
 	cd frontend && rm -rf dist node_modules
+
+# Convenience aliases
+typecheck: frontend-typecheck
+
+build: backend-build frontend-build
 
 # Deployment commands
 deploy-frontend: frontend-build

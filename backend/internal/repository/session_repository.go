@@ -535,6 +535,9 @@ func (r *SessionRepository) GetByDate(ctx context.Context, userID string, date s
 }
 
 func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, startTime string, endTime string) ([]models.SessionWithFlavors, error) {
+	// Debug log
+	log.Printf("GetByDateRange: userID=%s, start=%s, end=%s", userID, startTime, endTime)
+	
 	// Query sessions for the specific date range
 	data, _, err := r.client.From("shisha_sessions").
 		Select("*", "exact", false).
@@ -551,6 +554,12 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 	var sessions []models.ShishaSession
 	if err := json.Unmarshal(data, &sessions); err != nil {
 		return nil, err
+	}
+	
+	// Debug log
+	log.Printf("GetByDateRange: Found %d sessions", len(sessions))
+	for _, s := range sessions {
+		log.Printf("  Session %s: date=%s", s.ID[:8], s.SessionDate)
 	}
 
 	// Fetch flavors for each session

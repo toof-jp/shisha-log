@@ -1,4 +1,13 @@
-.PHONY: help backend-build backend-run backend-dev backend-test frontend-build frontend-dev frontend-test deploy-frontend deploy-backend
+.PHONY: all help clean install
+.PHONY: backend-build backend-run backend-dev backend-test backend-clean backend-deps backend-fmt backend-lint
+.PHONY: frontend-build frontend-dev frontend-test frontend-clean frontend-install frontend-lint frontend-typecheck
+.PHONY: docker-build docker-run docker-push ecr-login update-ecr-password
+.PHONY: deploy-frontend deploy-backend deploy-all
+.PHONY: infra-init infra-plan infra-apply infra-destroy infra-destroy-force infra-output infra-apply-module
+.PHONY: db-migrate db-reset db-status
+.PHONY: route53-list-zones route53-find-zone route53-list-records route53-test-dns
+.PHONY: create-acm-cert list-acm-certs check-acm-cert manage-acm-cert cert-validation-status
+.PHONY: setup-env setup-ecr setup-all supabase-types dev
 
 # Default target
 help:
@@ -37,7 +46,6 @@ help:
 	@echo "  make infra-destroy      - Destroy infrastructure (with confirmation)"
 	@echo "  make infra-destroy-force - Force destroy without confirmation"
 	@echo "  make infra-output       - Show Terraform outputs"
-	@echo "  make infra-apply-module MODULE=name - Apply specific module"
 	@echo ""
 	@echo "Docker Commands:"
 	@echo "  make docker-build       - Build backend Docker image"
@@ -243,21 +251,6 @@ infra-destroy-force:
 infra-output:
 	cd infra && terraform output
 
-# Apply specific module
-infra-apply-module:
-	@echo "Applying specific module..."
-	@if [ -z "$(MODULE)" ]; then echo "Error: MODULE variable not set. Usage: make infra-apply-module MODULE=module.unified_cloudfront"; exit 1; fi
-	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
-	cd infra && terraform apply -var-file=environments/prod/terraform.tfvars \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
-		-target=$(MODULE)
-
 # ACM Certificate management
 create-acm-cert:
 	@echo "Creating ACM certificate for domain..."
@@ -323,10 +316,6 @@ cert-validation-status:
 		echo "No certificate found for $$DOMAIN"; \
 	fi
 
-# Supabase commands
-supabase-types:
-	cd backend && supabase gen types typescript --local > types/supabase.ts
-
 # Setup commands
 setup-env:
 	@if [ ! -f .env ]; then cp .env.example .env && echo "Created .env from .env.example"; fi
@@ -337,6 +326,10 @@ setup-ecr:
 
 setup-all: setup-env frontend-install backend-deps
 	@echo "Setup completed! Edit .env files and run 'make backend-dev' and 'make frontend-dev'"
+
+# Supabase commands
+supabase-types:
+	cd backend && supabase gen types typescript --local > types/supabase.ts
 
 # Development shortcuts
 dev: backend-dev

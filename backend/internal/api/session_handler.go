@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -239,19 +240,25 @@ func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 		loc = time.UTC
 	}
 
-	// Parse the date and create start/end times in the user's timezone
-	date, err := time.Parse("2006-01-02", dateStr)
+	// Parse the date components
+	var year, month, day int
+	_, err = fmt.Sscanf(dateStr, "%d-%d-%d", &year, &month, &day)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid date format. Use YYYY-MM-DD"})
 	}
 
 	// Create start and end times in the user's timezone
-	startLocal := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
-	endLocal := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, loc)
+	startLocal := time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
+	endLocal := time.Date(year, time.Month(month), day, 23, 59, 59, 999999999, loc)
 
 	// Convert to UTC for database query
 	startUTC := startLocal.UTC()
 	endUTC := endLocal.UTC()
+	
+	// Debug logging
+	log.Printf("GetSessionsByDate: date=%s, timezone=%s", dateStr, timezone)
+	log.Printf("Local range: %s to %s", startLocal.Format("2006-01-02 15:04:05"), endLocal.Format("2006-01-02 15:04:05"))
+	log.Printf("UTC range: %s to %s", startUTC.Format("2006-01-02 15:04:05"), endUTC.Format("2006-01-02 15:04:05"))
 
 	// Get sessions in the UTC range
 	sessions, err := h.repo.GetByDateRange(c.Request().Context(), userID, startUTC.Format(time.RFC3339), endUTC.Format(time.RFC3339))

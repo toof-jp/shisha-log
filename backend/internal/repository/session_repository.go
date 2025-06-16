@@ -612,16 +612,12 @@ func (r *SessionRepository) GetStoreStats(ctx context.Context, userID string) (*
 		return nil, err
 	}
 
-	// Count sessions by store
+	// Count sessions by store (excluding empty store names)
 	storeMap := make(map[string]int)
 	for _, session := range sessions {
-		storeName := ""
 		if session.StoreName != nil && *session.StoreName != "" {
-			storeName = *session.StoreName
-		} else {
-			storeName = "店舗名なし"
+			storeMap[*session.StoreName]++
 		}
-		storeMap[storeName]++
 	}
 
 	// Convert to sorted slice
@@ -655,16 +651,12 @@ func (r *SessionRepository) GetCreatorStats(ctx context.Context, userID string) 
 		return nil, err
 	}
 
-	// Count sessions by creator
+	// Count sessions by creator (excluding empty creator names)
 	creatorMap := make(map[string]int)
 	for _, session := range sessions {
-		creator := ""
 		if session.Creator != nil && *session.Creator != "" {
-			creator = *session.Creator
-		} else {
-			creator = "作成者なし"
+			creatorMap[*session.Creator]++
 		}
-		creatorMap[creator]++
 	}
 
 	// Convert to sorted slice

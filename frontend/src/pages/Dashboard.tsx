@@ -247,8 +247,8 @@ export const Dashboard: React.FC = () => {
                   title="全フレーバーランキング" 
                 />
                 <StatisticsChart 
-                  data={flavorStats.all_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="全フレーバー構成比 (TOP 10)" 
+                  data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="全フレーバー構成比" 
                 />
               </div>
             </div>
@@ -263,8 +263,8 @@ export const Dashboard: React.FC = () => {
                   title="メインフレーバーランキング" 
                 />
                 <StatisticsChart 
-                  data={flavorStats.main_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="メインフレーバー構成比 (TOP 10)" 
+                  data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="メインフレーバー構成比" 
                 />
               </div>
             </div>
@@ -280,8 +280,8 @@ export const Dashboard: React.FC = () => {
                     title="作成者別セッション数" 
                   />
                   <StatisticsChart 
-                    data={creatorStats.creators.slice(0, 10).map(c => ({ name: c.creator, count: c.count }))} 
-                    title="作成者別構成比 (TOP 10)" 
+                    data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
+                    title="作成者別構成比" 
                   />
                 </div>
               ) : (
@@ -300,8 +300,8 @@ export const Dashboard: React.FC = () => {
                     title="店舗別訪問回数" 
                   />
                   <StatisticsChart 
-                    data={storeStats.stores.slice(0, 10).map(s => ({ name: s.store_name, count: s.count }))} 
-                    title="店舗別訪問構成比 (TOP 10)" 
+                    data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
+                    title="店舗別訪問構成比" 
                   />
                 </div>
               ) : (

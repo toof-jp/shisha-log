@@ -193,11 +193,11 @@ export const Dashboard: React.FC = () => {
                 <>
                   <StatisticsChart 
                     data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
-                    title="店舗別訪問構成比" 
+                    title="店舗別セッション構成比" 
                   />
                   <StatisticsRanking 
                     data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
-                    title="店舗別訪問回数" 
+                    title="店舗別セッション回数" 
                   />
                 </>
               ) : (

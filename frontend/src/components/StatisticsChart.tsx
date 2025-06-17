@@ -20,23 +20,35 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
   title = "統計", 
   countLabel = "回" 
 }) => {
+  const colors = [
+    '#4F46E5', // indigo-600
+    '#7C3AED', // violet-600
+    '#2563EB', // blue-600
+    '#0891B2', // cyan-600
+    '#059669', // emerald-600
+    '#84CC16', // lime-600
+    '#EAB308', // yellow-600
+    '#EA580C', // orange-600
+    '#DC2626', // red-600
+    '#DB2777', // pink-600
+    '#6366F1', // indigo-500
+    '#8B5CF6', // violet-500
+    '#3B82F6', // blue-500
+    '#06B6D4', // cyan-500
+    '#10B981', // emerald-500
+    '#A3E635', // lime-500
+    '#FACC15', // yellow-500
+    '#FB923C', // orange-500
+    '#EF4444', // red-500
+    '#EC4899', // pink-500
+  ];
+
   const chartData = {
     labels: data.map(item => item.name),
     datasets: [
       {
         data: data.map(item => item.count),
-        backgroundColor: [
-          '#4F46E5', // indigo-600
-          '#7C3AED', // violet-600
-          '#2563EB', // blue-600
-          '#0891B2', // cyan-600
-          '#059669', // emerald-600
-          '#84CC16', // lime-600
-          '#EAB308', // yellow-600
-          '#EA580C', // orange-600
-          '#DC2626', // red-600
-          '#DB2777', // pink-600
-        ],
+        backgroundColor: data.map((_, index) => colors[index % colors.length]),
         borderColor: '#fff',
         borderWidth: 2,
       },
@@ -65,29 +77,6 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
           boxWidth: 12,
           boxHeight: 12,
           usePointStyle: true,
-          generateLabels: function(chart: any) {
-            const datasets = chart.data.datasets;
-            const labels = chart.data.labels || [];
-            
-            return labels.map((label: string, i: number) => {
-              const dataset = datasets[0];
-              const backgroundColor = Array.isArray(dataset.backgroundColor) 
-                ? dataset.backgroundColor[i] 
-                : dataset.backgroundColor;
-              
-              // Don't truncate labels - let them wrap
-              const text = label || '';
-              
-              return {
-                text: text,
-                fillStyle: backgroundColor,
-                hidden: false,
-                index: i,
-                strokeStyle: dataset.borderColor,
-                lineWidth: dataset.borderWidth,
-              };
-            });
-          }
         },
       },
       tooltip: {

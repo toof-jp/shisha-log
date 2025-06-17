@@ -64,9 +64,6 @@ export const Layout: React.FC = () => {
             <div className="hidden md:flex md:items-center">
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-gray-700 text-sm">
-                    ようこそ、<span className="font-medium">{user?.user_id}</span>さん
-                  </span>
                   <button
                     onClick={handleLogout}
                     className="text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -143,9 +140,6 @@ export const Layout: React.FC = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
             {isAuthenticated ? (
               <>
-                <div className="px-3 py-2 text-gray-700 text-sm border-b border-gray-200">
-                  ようこそ、<span className="font-medium">{user?.user_id}</span>さん
-                </div>
                 <Link
                   to="/dashboard"
                   onClick={() => setIsMobileMenuOpen(false)}

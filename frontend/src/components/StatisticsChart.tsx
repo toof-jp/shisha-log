@@ -48,18 +48,23 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
     maintainAspectRatio: false,
     layout: {
       padding: {
-        bottom: 20,
+        bottom: 10,
       },
     },
     plugins: {
       legend: {
+        display: true,
         position: 'bottom' as const,
+        fullSize: true,
+        align: 'center' as const,
         labels: {
-          padding: 20,
+          padding: 10,
           font: {
-            size: 14,
+            size: 12,
           },
-          boxWidth: 15,
+          boxWidth: 12,
+          boxHeight: 12,
+          usePointStyle: true,
           generateLabels: function(chart: any) {
             const datasets = chart.data.datasets;
             const labels = chart.data.labels || [];
@@ -70,10 +75,8 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
                 ? dataset.backgroundColor[i] 
                 : dataset.backgroundColor;
               
-              // Truncate long labels
-              const text = label && label.length > 20 
-                ? label.substring(0, 20) + '...' 
-                : label || '';
+              // Don't truncate labels - let them wrap
+              const text = label || '';
               
               return {
                 text: text,
@@ -107,7 +110,7 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
       {data.length === 0 ? (
         <p className="text-gray-500 text-sm">データがありません</p>
       ) : (
-        <div className="h-80 sm:h-96 md:h-[28rem]">
+        <div className="w-full" style={{ minHeight: `${Math.max(400, data.length * 30 + 300)}px` }}>
           <Pie data={chartData} options={options} />
         </div>
       )}

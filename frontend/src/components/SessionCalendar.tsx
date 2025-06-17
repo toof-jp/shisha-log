@@ -66,7 +66,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(
-        <div key={`empty-${i}`} className="h-24 bg-gray-50"></div>
+        <div key={`empty-${i}`} className="h-16 sm:h-20 md:h-24 bg-gray-50"></div>
       );
     }
 
@@ -84,24 +84,24 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
         <div
           key={day}
           onClick={() => count > 0 && onDateClick && onDateClick(dateStr)}
-          className={`h-24 border relative ${
+          className={`h-16 sm:h-20 md:h-24 border relative ${
             isToday ? 'bg-blue-50 border-blue-500' : 'bg-white border-gray-200'
           } ${count > 0 ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
         >
-          <div className="absolute top-1 left-2">
+          <div className="absolute top-0.5 left-1 sm:top-1 sm:left-2">
             <span className={`text-xs ${isToday ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
               {day}
             </span>
           </div>
           
           {count > 0 && (
-            <div className="h-full flex items-center justify-center">
+            <div className="h-full flex items-center justify-center pt-3 sm:pt-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-indigo-600">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-indigo-600">
                   {count}
                 </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  {count === 1 ? 'セッション' : 'セッション'}
+                <div className="text-[10px] sm:text-xs text-gray-600 hidden sm:block">
+                  セッション
                 </div>
               </div>
             </div>
@@ -133,29 +133,29 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">
+    <div className="bg-white shadow rounded-lg p-3 sm:p-4 md:p-6">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900">
           {year}年 {monthNames[month]}
         </h2>
-        <div className="flex space-x-2">
+        <div className="flex space-x-1 sm:space-x-2">
           <button
             onClick={handlePreviousMonth}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
           >
-            ＜ 前月
+            <span className="hidden sm:inline">＜ </span>前月
           </button>
           <button
             onClick={handleToday}
-            className="px-3 py-1 text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors"
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors"
           >
             今日
           </button>
           <button
             onClick={handleNextMonth}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
           >
-            次月 ＞
+            次月<span className="hidden sm:inline"> ＞</span>
           </button>
         </div>
       </div>
@@ -164,17 +164,17 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
         <div className="text-center py-8 text-gray-500">読み込み中...</div>
       ) : (
         <>
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
             {dayNames.map((day) => (
               <div
                 key={day}
-                className="text-center text-sm font-medium text-gray-700 py-2"
+                className="text-center text-xs sm:text-sm font-medium text-gray-700 py-1 sm:py-2"
               >
                 {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {renderCalendarDays()}
           </div>
         </>

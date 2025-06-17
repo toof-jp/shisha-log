@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
+	postgrest "github.com/supabase-community/postgrest-go"
 	"github.com/toof-jp/shisha-log/backend/internal/models"
 )
 
@@ -157,7 +158,7 @@ func (r *SessionRepository) GetByUserID(ctx context.Context, userID string, limi
 	query := r.client.From("shisha_sessions").
 		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,created_at,updated_at", "exact", false).
 		Eq("user_id", userID).
-		Order("session_date", nil) // nil uses default options (descending)
+		Order("created_at", &postgrest.OrderOpts{Ascending: false}) // Order by created_at descending
 
 	if limit > 0 {
 		query = query.Limit(limit, "")

@@ -241,32 +241,28 @@ export const Dashboard: React.FC = () => {
           {activeTab === 'all-flavors' && flavorStats && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">全フレーバー統計</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <StatisticsRanking 
-                  data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="全フレーバーランキング" 
-                />
-                <StatisticsChart 
-                  data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="全フレーバー構成比" 
-                />
-              </div>
+              <StatisticsChart 
+                data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                title="全フレーバー構成比" 
+              />
+              <StatisticsRanking 
+                data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                title="全フレーバーランキング" 
+              />
             </div>
           )}
 
           {activeTab === 'main-flavors' && flavorStats && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">メインフレーバー統計</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <StatisticsRanking 
-                  data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="メインフレーバーランキング" 
-                />
-                <StatisticsChart 
-                  data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                  title="メインフレーバー構成比" 
-                />
-              </div>
+              <StatisticsChart 
+                data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                title="メインフレーバー構成比" 
+              />
+              <StatisticsRanking 
+                data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                title="メインフレーバーランキング" 
+              />
             </div>
           )}
 
@@ -274,16 +270,16 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">作成者統計</h2>
               {creatorStats.creators.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <StatisticsRanking 
-                    data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
-                    title="作成者別セッション数" 
-                  />
+                <>
                   <StatisticsChart 
                     data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
                     title="作成者別構成比" 
                   />
-                </div>
+                  <StatisticsRanking 
+                    data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
+                    title="作成者別セッション数" 
+                  />
+                </>
               ) : (
                 <p className="text-gray-500">作成者データがありません</p>
               )}
@@ -294,16 +290,16 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">店舗統計</h2>
               {storeStats.stores.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <StatisticsRanking 
-                    data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
-                    title="店舗別訪問回数" 
-                  />
+                <>
                   <StatisticsChart 
                     data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
                     title="店舗別訪問構成比" 
                   />
-                </div>
+                  <StatisticsRanking 
+                    data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
+                    title="店舗別訪問回数" 
+                  />
+                </>
               ) : (
                 <p className="text-gray-500">店舗データがありません</p>
               )}

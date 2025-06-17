@@ -163,10 +163,10 @@ docker-build:
 		--build-arg VERSION=$(VERSION) \
 		-t shisha-log .
 
-docker-run: update-ecr-password
+docker-run:
 	docker run --env-file .env -p 8080:8080 shisha-log
 
-docker-push:
+docker-push: update-ecr-password
 	@echo "Pushing to ECR Public..."
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	if [ -z "$$ECR_ALIAS" ]; then echo "Error: ECR_ALIAS environment variable not set"; exit 1; fi; \

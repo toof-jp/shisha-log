@@ -19,8 +19,7 @@ export const Dashboard: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'calendar' | 'statistics'>('calendar');
-  const [statisticsView, setStatisticsView] = useState<'ranking' | 'chart'>('ranking');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'all-flavors' | 'main-flavors' | 'creators' | 'stores'>('calendar');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -175,7 +174,7 @@ export const Dashboard: React.FC = () => {
       {/* Tabs Section */}
       <div className="mt-8">
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('calendar')}
               className={`${
@@ -187,136 +186,126 @@ export const Dashboard: React.FC = () => {
               カレンダー
             </button>
             <button
-              onClick={() => setActiveTab('statistics')}
+              onClick={() => setActiveTab('all-flavors')}
               className={`${
-                activeTab === 'statistics'
+                activeTab === 'all-flavors'
                   ? 'border-indigo-500 text-indigo-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
-              統計
+              全フレーバー
+            </button>
+            <button
+              onClick={() => setActiveTab('main-flavors')}
+              className={`${
+                activeTab === 'main-flavors'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              メインフレーバー
+            </button>
+            <button
+              onClick={() => setActiveTab('creators')}
+              className={`${
+                activeTab === 'creators'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              作成者
+            </button>
+            <button
+              onClick={() => setActiveTab('stores')}
+              className={`${
+                activeTab === 'stores'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              店舗
             </button>
           </nav>
         </div>
 
         <div className="mt-6">
-          {activeTab === 'calendar' ? (
+          {activeTab === 'calendar' && (
             <SessionCalendar 
               onDateClick={(date) => {
                 setSelectedDate(date);
                 setIsModalOpen(true);
               }}
             />
-          ) : (
-            <div>
-              {/* Statistics View Tabs */}
-              <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                  <button
-                    onClick={() => setStatisticsView('ranking')}
-                    className={`${
-                      statisticsView === 'ranking'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    ランキング
-                  </button>
-                  <button
-                    onClick={() => setStatisticsView('chart')}
-                    className={`${
-                      statisticsView === 'chart'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    円グラフ
-                  </button>
-                </nav>
+          )}
+
+          {activeTab === 'all-flavors' && flavorStats && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">全フレーバー統計</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <StatisticsRanking 
+                  data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="全フレーバーランキング" 
+                />
+                <StatisticsChart 
+                  data={flavorStats.all_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="全フレーバー構成比 (TOP 10)" 
+                />
               </div>
+            </div>
+          )}
 
-              {statisticsView === 'ranking' ? (
-                <div className="space-y-8">
-                  {/* Flavor Rankings */}
-                  {flavorStats && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバーランキング</h2>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <StatisticsRanking 
-                          data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                          title="メインフレーバー" 
-                        />
-                        <StatisticsRanking 
-                          data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                          title="全フレーバー" 
-                        />
-                      </div>
-                    </div>
-                  )}
+          {activeTab === 'main-flavors' && flavorStats && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">メインフレーバー統計</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <StatisticsRanking 
+                  data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="メインフレーバーランキング" 
+                />
+                <StatisticsChart 
+                  data={flavorStats.main_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                  title="メインフレーバー構成比 (TOP 10)" 
+                />
+              </div>
+            </div>
+          )}
 
-                  {/* Store Rankings */}
-                  {storeStats && storeStats.stores.length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗ランキング</h2>
-                      <StatisticsRanking 
-                        data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
-                        title="店舗別訪問回数" 
-                      />
-                    </div>
-                  )}
-
-                  {/* Creator Rankings */}
-                  {creatorStats && creatorStats.creators.length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者ランキング</h2>
-                      <StatisticsRanking 
-                        data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
-                        title="作成者別セッション数" 
-                      />
-                    </div>
-                  )}
+          {activeTab === 'creators' && creatorStats && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">作成者統計</h2>
+              {creatorStats.creators.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <StatisticsRanking 
+                    data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
+                    title="作成者別セッション数" 
+                  />
+                  <StatisticsChart 
+                    data={creatorStats.creators.slice(0, 10).map(c => ({ name: c.creator, count: c.count }))} 
+                    title="作成者別構成比 (TOP 10)" 
+                  />
                 </div>
               ) : (
-                <div className="space-y-8">
-                  {/* Flavor Charts */}
-                  {flavorStats && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー構成比</h2>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <StatisticsChart 
-                          data={flavorStats.main_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                          title="メインフレーバー構成比 (TOP 10)" 
-                        />
-                        <StatisticsChart 
-                          data={flavorStats.all_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                          title="全フレーバー構成比 (TOP 10)" 
-                        />
-                      </div>
-                    </div>
-                  )}
+                <p className="text-gray-500">作成者データがありません</p>
+              )}
+            </div>
+          )}
 
-                  {/* Store Charts */}
-                  {storeStats && storeStats.stores.length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗構成比</h2>
-                      <StatisticsChart 
-                        data={storeStats.stores.slice(0, 10).map(s => ({ name: s.store_name, count: s.count }))} 
-                        title="店舗別訪問構成比 (TOP 10)" 
-                      />
-                    </div>
-                  )}
-
-                  {/* Creator Charts */}
-                  {creatorStats && creatorStats.creators.length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者構成比</h2>
-                      <StatisticsChart 
-                        data={creatorStats.creators.slice(0, 10).map(c => ({ name: c.creator, count: c.count }))} 
-                        title="作成者別構成比 (TOP 10)" 
-                      />
-                    </div>
-                  )}
+          {activeTab === 'stores' && storeStats && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">店舗統計</h2>
+              {storeStats.stores.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <StatisticsRanking 
+                    data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
+                    title="店舗別訪問回数" 
+                  />
+                  <StatisticsChart 
+                    data={storeStats.stores.slice(0, 10).map(s => ({ name: s.store_name, count: s.count }))} 
+                    title="店舗別訪問構成比 (TOP 10)" 
+                  />
                 </div>
+              ) : (
+                <p className="text-gray-500">店舗データがありません</p>
               )}
             </div>
           )}

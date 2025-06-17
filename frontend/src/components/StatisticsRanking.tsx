@@ -24,7 +24,7 @@ export const StatisticsRanking: React.FC<StatisticsRankingProps> = ({
       {data.length === 0 ? (
         <p className="text-gray-500 text-sm">データがありません</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-96 overflow-y-auto">
           {data.map((item, index) => (
             <div key={item.name || 'unknown'} className="flex items-center">
               <span className="text-sm font-medium text-gray-600 w-8">

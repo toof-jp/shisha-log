@@ -20,6 +20,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'calendar' | 'statistics'>('calendar');
+  const [statisticsView, setStatisticsView] = useState<'ranking' | 'chart'>('ranking');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -207,75 +208,114 @@ export const Dashboard: React.FC = () => {
               }}
             />
           ) : (
-            <div className="space-y-12">
-              {/* Flavor Statistics */}
-              {flavorStats && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー統計</h2>
-                  
-                  {/* Main Flavors */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-medium text-gray-700 mb-4">メインフレーバー（オーダー1）ランキング</h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              {/* Statistics View Tabs */}
+              <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                  <button
+                    onClick={() => setStatisticsView('ranking')}
+                    className={`${
+                      statisticsView === 'ranking'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    ランキング
+                  </button>
+                  <button
+                    onClick={() => setStatisticsView('chart')}
+                    className={`${
+                      statisticsView === 'chart'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    円グラフ
+                  </button>
+                </nav>
+              </div>
+
+              {statisticsView === 'ranking' ? (
+                <div className="space-y-8">
+                  {/* Flavor Rankings */}
+                  {flavorStats && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバーランキング</h2>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <StatisticsRanking 
+                          data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                          title="メインフレーバー" 
+                        />
+                        <StatisticsRanking 
+                          data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
+                          title="全フレーバー" 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Store Rankings */}
+                  {storeStats && storeStats.stores.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗ランキング</h2>
                       <StatisticsRanking 
-                        data={flavorStats.main_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                        title="TOP 10 メインフレーバー" 
-                      />
-                      <StatisticsChart 
-                        data={flavorStats.main_flavors.slice(0, 5).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                        title="メインフレーバー構成比" 
+                        data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
+                        title="店舗別訪問回数" 
                       />
                     </div>
-                  </div>
+                  )}
 
-                  {/* All Flavors */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-4">全フレーバーランキング</h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Creator Rankings */}
+                  {creatorStats && creatorStats.creators.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者ランキング</h2>
                       <StatisticsRanking 
-                        data={flavorStats.all_flavors.map(f => ({ name: f.flavor_name, count: f.count }))} 
-                        title="TOP 10 全フレーバー" 
-                      />
-                      <StatisticsChart 
-                        data={flavorStats.all_flavors.slice(0, 5).map(f => ({ name: f.flavor_name, count: f.count }))} 
-                        title="全フレーバー構成比" 
+                        data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
+                        title="作成者別セッション数" 
                       />
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              ) : (
+                <div className="space-y-8">
+                  {/* Flavor Charts */}
+                  {flavorStats && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">フレーバー構成比</h2>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <StatisticsChart 
+                          data={flavorStats.main_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                          title="メインフレーバー構成比 (TOP 10)" 
+                        />
+                        <StatisticsChart 
+                          data={flavorStats.all_flavors.slice(0, 10).map(f => ({ name: f.flavor_name, count: f.count }))} 
+                          title="全フレーバー構成比 (TOP 10)" 
+                        />
+                      </div>
+                    </div>
+                  )}
 
-              {/* Store Statistics */}
-              {storeStats && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗統計</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <StatisticsRanking 
-                      data={storeStats.stores.map(s => ({ name: s.store_name, count: s.count }))} 
-                      title="TOP 10 店舗" 
-                    />
-                    <StatisticsChart 
-                      data={storeStats.stores.slice(0, 5).map(s => ({ name: s.store_name, count: s.count }))} 
-                      title="店舗別訪問構成比" 
-                    />
-                  </div>
-                </div>
-              )}
+                  {/* Store Charts */}
+                  {storeStats && storeStats.stores.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">店舗構成比</h2>
+                      <StatisticsChart 
+                        data={storeStats.stores.slice(0, 10).map(s => ({ name: s.store_name, count: s.count }))} 
+                        title="店舗別訪問構成比 (TOP 10)" 
+                      />
+                    </div>
+                  )}
 
-              {/* Creator Statistics */}
-              {creatorStats && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者統計</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <StatisticsRanking 
-                      data={creatorStats.creators.map(c => ({ name: c.creator, count: c.count }))} 
-                      title="TOP 10 作成者" 
-                    />
-                    <StatisticsChart 
-                      data={creatorStats.creators.slice(0, 5).map(c => ({ name: c.creator, count: c.count }))} 
-                      title="作成者別構成比" 
-                    />
-                  </div>
+                  {/* Creator Charts */}
+                  {creatorStats && creatorStats.creators.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">作成者構成比</h2>
+                      <StatisticsChart 
+                        data={creatorStats.creators.slice(0, 10).map(c => ({ name: c.creator, count: c.count }))} 
+                        title="作成者別構成比 (TOP 10)" 
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

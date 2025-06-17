@@ -406,13 +406,7 @@ func (r *SessionRepository) GetFlavorStats(ctx context.Context, userID string) (
 		return allFlavors[i].Count > allFlavors[j].Count
 	})
 
-	// Limit to top 10
-	if len(mainFlavors) > 10 {
-		mainFlavors = mainFlavors[:10]
-	}
-	if len(allFlavors) > 10 {
-		allFlavors = allFlavors[:10]
-	}
+	// No limit - return all flavors
 
 	return &models.FlavorStats{
 		MainFlavors: mainFlavors,
@@ -634,10 +628,7 @@ func (r *SessionRepository) GetStoreStats(ctx context.Context, userID string) (*
 		return stores[i].Count > stores[j].Count
 	})
 
-	// Limit to top 10
-	if len(stores) > 10 {
-		stores = stores[:10]
-	}
+	// No limit - return all stores
 
 	return &models.StoreStats{
 		Stores: stores,
@@ -673,10 +664,7 @@ func (r *SessionRepository) GetCreatorStats(ctx context.Context, userID string) 
 		return creators[i].Count > creators[j].Count
 	})
 
-	// Limit to top 10
-	if len(creators) > 10 {
-		creators = creators[:10]
-	}
+	// No limit - return all creators
 
 	return &models.CreatorStats{
 		Creators: creators,

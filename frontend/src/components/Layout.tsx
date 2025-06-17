@@ -74,22 +74,7 @@ export const Layout: React.FC = () => {
                     ログアウト
                   </button>
                 </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    to="/login"
-                    className="text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    ログイン
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    新規登録
-                  </Link>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile menu button */}
@@ -189,24 +174,7 @@ export const Layout: React.FC = () => {
                   ログアウト
                 </button>
               </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  ログイン
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="bg-indigo-600 text-white hover:bg-indigo-700 block px-3 py-2 rounded-md text-base font-medium text-center"
-                >
-                  新規登録
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </nav>

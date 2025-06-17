@@ -26,7 +26,7 @@ export const Home: React.FC = () => {
                   to="/register"
                   className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  はじめる
+                  新規登録
                 </Link>
                 <Link
                   to="/login"

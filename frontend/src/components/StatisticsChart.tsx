@@ -61,17 +61,29 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
           },
           boxWidth: 15,
           generateLabels: function(chart: any) {
-            const original = ChartJS.defaults.plugins.legend.labels.generateLabels;
-            const labels = original.call(this, chart);
+            const datasets = chart.data.datasets;
+            const labels = chart.data.labels || [];
             
-            // Truncate long labels
-            labels.forEach((label: any) => {
-              if (label.text && label.text.length > 20) {
-                label.text = label.text.substring(0, 20) + '...';
-              }
+            return labels.map((label: string, i: number) => {
+              const dataset = datasets[0];
+              const backgroundColor = Array.isArray(dataset.backgroundColor) 
+                ? dataset.backgroundColor[i] 
+                : dataset.backgroundColor;
+              
+              // Truncate long labels
+              const text = label && label.length > 20 
+                ? label.substring(0, 20) + '...' 
+                : label || '';
+              
+              return {
+                text: text,
+                fillStyle: backgroundColor,
+                hidden: false,
+                index: i,
+                strokeStyle: dataset.borderColor,
+                lineWidth: dataset.borderWidth,
+              };
             });
-            
-            return labels;
           }
         },
       },

@@ -177,15 +177,21 @@ export const Sessions: React.FC = () => {
                 <div className="mt-4 flex justify-between items-center">
                   <Link
                     to={`/sessions/${session.id}`}
-                    className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                    className="text-indigo-600 hover:text-indigo-900 text-sm font-medium flex items-center"
                   >
-                    詳細を見る →
+                    詳細を見る
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
                   <button
                     onClick={() => handleDelete(session.id)}
-                    className="text-red-600 hover:text-red-900 text-sm font-medium"
+                    className="text-red-600 hover:text-red-900 p-2"
+                    title="削除"
                   >
-                    削除
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -269,15 +275,21 @@ export const Sessions: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
                         to={`/sessions/${session.id}`}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        className="text-indigo-600 hover:text-indigo-900 mr-4 inline-block"
+                        title="詳細を表示"
                       >
-                        表示
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
                       </Link>
                       <button
                         onClick={() => handleDelete(session.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 inline-block"
+                        title="削除"
                       >
-                        削除
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                       </button>
                     </td>
                   </tr>

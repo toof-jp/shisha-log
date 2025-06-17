@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
@@ -8,29 +8,79 @@ import { sortFlavorsByOrder } from '../utils/flavorSort';
 export const Sessions: React.FC = () => {
   const [sessions, setSessions] = useState<ShishaSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
-  const [page, setPage] = useState(0);
-  const [totalSessions, setTotalSessions] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const limit = 20;
 
   useEffect(() => {
-    fetchSessions();
-  }, [page]);
+    // Initial load
+    fetchSessions(0);
+  }, []);
 
-  const fetchSessions = async () => {
+  useEffect(() => {
+    // Set up intersection observer
+    if (loadingMore || !hasMore) return;
+
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchMoreSessions();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px',
+      }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, offset]);
+
+  const fetchSessions = async (newOffset: number) => {
     try {
       setLoading(true);
-      const response = await apiClient.getSessions(limit, page * limit);
+      const response = await apiClient.getSessions(limit, newOffset);
       console.log('Sessions API response:', response);
       setSessions(response.sessions || []);
-      setTotalSessions(response.total || 0);
+      setHasMore((response.sessions || []).length === limit);
+      setOffset(newOffset + limit);
     } catch (err) {
       setError('セッションの読み込みに失敗しました');
       console.error('Error fetching sessions:', err);
       setSessions([]);
-      setTotalSessions(0);
+      setHasMore(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMoreSessions = async () => {
+    try {
+      setLoadingMore(true);
+      const response = await apiClient.getSessions(limit, offset);
+      const newSessions = response.sessions || [];
+      setSessions(prev => [...prev, ...newSessions]);
+      setHasMore(newSessions.length === limit);
+      setOffset(prev => prev + limit);
+    } catch (err) {
+      console.error('Error fetching more sessions:', err);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -39,13 +89,12 @@ export const Sessions: React.FC = () => {
     
     try {
       await apiClient.deleteSession(id);
-      fetchSessions();
+      // Remove the deleted session from the list
+      setSessions(prev => prev.filter(session => session.id !== id));
     } catch (err) {
       alert('セッションの削除に失敗しました');
     }
   };
-
-  const totalPages = Math.ceil(totalSessions / limit);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -85,9 +134,21 @@ export const Sessions: React.FC = () => {
                     <p className="text-sm text-gray-500">
                       {formatDateTime(session.session_date)}
                     </p>
-                    <h3 className="text-base font-medium text-gray-900 mt-1">
-                      {session.store_name || session.mix_name || '無題のセッション'}
-                    </h3>
+                    {session.store_name && (
+                      <p className="text-base font-medium text-gray-900 mt-1">
+                        店舗: {session.store_name}
+                      </p>
+                    )}
+                    {session.mix_name && (
+                      <p className="text-base font-medium text-gray-900 mt-1">
+                        ミックス: {session.mix_name}
+                      </p>
+                    )}
+                    {!session.store_name && !session.mix_name && (
+                      <p className="text-base font-medium text-gray-400 mt-1">
+                        無題のセッション
+                      </p>
+                    )}
                     {session.creator && (
                       <p className="text-sm text-gray-600 mt-1">
                         作成者: {session.creator}
@@ -129,6 +190,24 @@ export const Sessions: React.FC = () => {
                 </div>
               </div>
             ))}
+            
+            {/* Mobile infinite scroll loading indicator */}
+            {(loadingMore || !hasMore) && sessions.length > 0 && (
+              <div className="text-center py-4">
+                {loadingMore && (
+                  <div className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600 text-sm">読み込み中...</span>
+                  </div>
+                )}
+                {!hasMore && (
+                  <p className="text-gray-500 text-sm">すべてのセッションを表示しました</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Desktop view - Table */}
@@ -140,7 +219,10 @@ export const Sessions: React.FC = () => {
                     日付
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    店舗 / ミックス
+                    店舗
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ミックス
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     作成者
@@ -160,12 +242,10 @@ export const Sessions: React.FC = () => {
                       {formatDateTime(session.session_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div>
-                        {session.store_name || session.mix_name || '-'}
-                        {session.store_name && session.mix_name && (
-                          <span className="text-gray-500 text-xs block">{session.mix_name}</span>
-                        )}
-                      </div>
+                      {session.store_name || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {session.mix_name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {session.creator || '-'}
@@ -206,61 +286,21 @@ export const Sessions: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6">
-              {/* Mobile pagination */}
-              <div className="flex items-center justify-between sm:hidden">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
-                  className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  前へ
-                </button>
-                <span className="text-sm text-gray-700">
-                  {totalPages}ページ中{page + 1}ページ目
-                </span>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages - 1}
-                  className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  次へ
-                </button>
-              </div>
-
-              {/* Desktop pagination */}
-              <div className="hidden sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    表示中{' '}
-                    <span className="font-medium">{page * limit + 1}</span>～{' '}
-                    <span className="font-medium">
-                      {Math.min((page + 1) * limit, totalSessions)}
-                    </span>{' '}
-                    / 全<span className="font-medium">{totalSessions}</span>件
-                  </p>
+          {/* Infinite scroll loading indicator */}
+          {sessions.length > 0 && (
+            <div ref={loadMoreRef} className="mt-8 text-center py-4">
+              {loadingMore && (
+                <div className="inline-flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-gray-600">読み込み中...</span>
                 </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 0}
-                      className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      前へ
-                    </button>
-                    <button
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages - 1}
-                      className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      次へ
-                    </button>
-                  </nav>
-                </div>
-              </div>
+              )}
+              {!hasMore && sessions.length > 0 && (
+                <p className="text-gray-500 text-sm">すべてのセッションを表示しました</p>
+              )}
             </div>
           )}
         </>

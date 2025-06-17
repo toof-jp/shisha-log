@@ -52,18 +52,17 @@ Single environment file in the project root:
 
 ## Deployment
 
-The application can be deployed with:
-- **Frontend**: S3 + CloudFront (static hosting)
-- **Backend**: AWS Lightsail with Docker
+The application uses separate domains for frontend and backend:
+- **Frontend**: S3 + CloudFront (https://shisha.toof.jp)
+- **Backend**: AWS Lightsail with Docker (https://api.shisha.toof.jp)
 - **Database**: PostgreSQL via Supabase
-- **Domain**: Unified domain with path-based routing
 
 See `docs/` for detailed deployment guides.
 
 ## Documentation
 
 - [API Documentation](API.md)
-- [Unified Domain Architecture](docs/UNIFIED_DOMAIN_ARCHITECTURE.md)
+- [Infrastructure Architecture](docs/INFRASTRUCTURE.md)
 - [DNS Configuration Guide](docs/DNS_CONFIGURATION_GUIDE.md)
 - [Frontend Specifications](frontend/docs/SPECS.md)
 - [Backend Deployment](docs/backend/DEPLOYMENT.md)

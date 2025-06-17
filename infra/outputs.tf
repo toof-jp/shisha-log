@@ -10,22 +10,22 @@ output "lightsail_static_ip" {
 
 output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
-  value       = module.unified_cloudfront.cloudfront_distribution_id
+  value       = module.frontend_cloudfront.cloudfront_distribution_id
 }
 
 output "cloudfront_domain_name" {
   description = "CloudFront distribution domain name"
-  value       = module.unified_cloudfront.cloudfront_domain_name
+  value       = module.frontend_cloudfront.cloudfront_domain_name
 }
 
 output "frontend_s3_bucket" {
   description = "S3 bucket name for frontend"
-  value       = module.unified_cloudfront.s3_bucket_name
+  value       = module.frontend_cloudfront.s3_bucket_name
 }
 
 output "application_url" {
   description = "URL to access the application"
-  value       = module.unified_cloudfront.cloudfront_url
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "https://${module.frontend_cloudfront.cloudfront_domain_name}"
 }
 
 output "dns_configuration" {
@@ -33,18 +33,24 @@ output "dns_configuration" {
   value = <<-EOT
     Configure your DNS provider with the following settings:
     
+    Frontend (CloudFront):
     Type: CNAME
     Name: ${replace(var.domain_name, ".${join(".", slice(split(".", var.domain_name), 1, length(split(".", var.domain_name))))}", "")}
-    Value: ${module.unified_cloudfront.cloudfront_domain_name}
+    Value: ${module.frontend_cloudfront.cloudfront_domain_name}
     
     Or if using root domain:
     Type: ALIAS (or ANAME)
     Name: @
-    Value: ${module.unified_cloudfront.cloudfront_domain_name}
+    Value: ${module.frontend_cloudfront.cloudfront_domain_name}
+    
+    Backend API (Lightsail):
+    Type: A
+    Name: api
+    Value: ${module.lightsail.static_ip_address}
     
     After DNS propagation, access your application at:
     - Frontend: https://${var.domain_name}
-    - API: https://${var.domain_name}/api/v1
+    - API: https://api.${var.domain_name}/api/v1
   EOT
 }
 
@@ -52,16 +58,16 @@ output "deployment_instructions" {
   description = "Deployment instructions"
   value = <<-EOT
     Frontend deployment:
-    1. cd shisha-log-frontend && npm run build
-    2. aws s3 sync dist/ s3://${module.unified_cloudfront.s3_bucket_name}/ --delete
-    3. aws cloudfront create-invalidation --distribution-id ${module.unified_cloudfront.cloudfront_distribution_id} --paths "/*"
+    1. cd frontend && npm run build
+    2. aws s3 sync dist/ s3://${module.frontend_cloudfront.s3_bucket_name}/ --delete
+    3. aws cloudfront create-invalidation --distribution-id ${module.frontend_cloudfront.cloudfront_distribution_id} --paths "/*"
     
     Backend deployment:
     1. Build and push Docker image to ${var.container_registry}
     2. Lightsail will automatically pull and deploy the new image
     
     Environment updates:
-    - Frontend: VITE_API_BASE_URL=https://${var.domain_name}/api/v1
+    - Frontend: VITE_API_BASE_URL=https://api.${var.domain_name}/api/v1
     - Backend: ALLOWED_ORIGINS=https://${var.domain_name}
   EOT
 }

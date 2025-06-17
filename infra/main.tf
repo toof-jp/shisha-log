@@ -68,23 +68,14 @@ module "acm" {
   }
 }
 
-# Unified CloudFront distribution for both frontend and backend
-module "unified_cloudfront" {
-  source = "./modules/unified-cloudfront"
+# CloudFront distribution for frontend only
+module "frontend_cloudfront" {
+  source = "./modules/frontend-cloudfront"
   
   project_name = var.project_name
   environment  = var.environment
   domain_name  = var.domain_name
   acm_certificate_arn = module.acm.certificate_arn
-  
-  # Backend origin configuration
-  lightsail_static_ip     = module.lightsail.static_ip_address
-  backend_domain_name     = var.backend_domain_name
-  lightsail_https_enabled = false  # Lightsail uses HTTP internally
-  
-  # Optional: Add custom header for origin verification
-  origin_custom_header_name  = var.origin_custom_header_name
-  origin_custom_header_value = var.origin_custom_header_value
 }
 
 # Route 53 DNS configuration
@@ -95,8 +86,8 @@ module "route53" {
   
   domain_name            = var.route53_domain_name != "" ? var.route53_domain_name : var.domain_name
   hosted_zone_id         = var.route53_hosted_zone_id
-  cloudfront_domain_name = module.unified_cloudfront.distribution_domain_name
-  cloudfront_zone_id     = module.unified_cloudfront.distribution_hosted_zone_id
+  cloudfront_domain_name = module.frontend_cloudfront.cloudfront_domain_name
+  cloudfront_zone_id     = "Z2FDTNDATAQYW2"  # CloudFront's hosted zone ID
   lightsail_static_ip    = module.lightsail.static_ip_address
   
   create_apex_record = var.create_apex_record

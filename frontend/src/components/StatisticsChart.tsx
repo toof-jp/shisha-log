@@ -46,14 +46,33 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        bottom: 20,
+      },
+    },
     plugins: {
       legend: {
         position: 'bottom' as const,
         labels: {
-          padding: 15,
+          padding: 20,
           font: {
-            size: 12,
+            size: 14,
           },
+          boxWidth: 15,
+          generateLabels: function(chart: any) {
+            const original = ChartJS.defaults.plugins.legend.labels.generateLabels;
+            const labels = original.call(this, chart);
+            
+            // Truncate long labels
+            labels.forEach((label: any) => {
+              if (label.text && label.text.length > 20) {
+                label.text = label.text.substring(0, 20) + '...';
+              }
+            });
+            
+            return labels;
+          }
         },
       },
       tooltip: {
@@ -71,12 +90,12 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="bg-white shadow rounded-lg p-4 sm:p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
       {data.length === 0 ? (
         <p className="text-gray-500 text-sm">データがありません</p>
       ) : (
-        <div className="h-64">
+        <div className="h-80 sm:h-96 md:h-[28rem]">
           <Pie data={chartData} options={options} />
         </div>
       )}

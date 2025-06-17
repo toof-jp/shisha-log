@@ -149,7 +149,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
             onClick={handleToday}
             className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors"
           >
-            今日
+            今月
           </button>
           <button
             onClick={handleNextMonth}

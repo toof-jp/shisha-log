@@ -11,9 +11,11 @@ interface DemoContextType {
 
 const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
+const EMPTY_SESSIONS: ShishaSession[] = [];
+
 export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const [demoSessions, setDemoSessions] = useState<ShishaSession[]>([]);
+  const [demoSessions, setDemoSessions] = useState<ShishaSession[]>(EMPTY_SESSIONS);
   const location = useLocation();
 
   useEffect(() => {
@@ -24,16 +26,16 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDemoSessions(generateDemoSessions());
     } else {
       setIsDemoMode(false);
-      setDemoSessions([]);
+      setDemoSessions(EMPTY_SESSIONS);
     }
-  }, [location]);
+  }, [location.pathname]);
 
   const setDemoMode = (value: boolean) => {
     setIsDemoMode(value);
     if (value) {
       setDemoSessions(generateDemoSessions());
     } else {
-      setDemoSessions([]);
+      setDemoSessions(EMPTY_SESSIONS);
     }
   };
 

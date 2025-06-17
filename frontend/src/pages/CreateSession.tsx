@@ -173,6 +173,11 @@ export const CreateSession: React.FC = () => {
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="例：Cloud 9 Lounge"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
 
@@ -185,6 +190,11 @@ export const CreateSession: React.FC = () => {
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="例：ブルーベリーミントアイス"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
 
@@ -197,6 +207,11 @@ export const CreateSession: React.FC = () => {
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="例：アーメド"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
 
@@ -211,12 +226,22 @@ export const CreateSession: React.FC = () => {
                     type="text"
                     placeholder="フレーバー名"
                     className="w-full sm:flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                   <input
                     {...register(`flavors.${index}.brand`)}
                     type="text"
                     placeholder="ブランド（任意）"
                     className="w-full sm:flex-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                   {fields.length > 0 && (
                     <button
@@ -262,6 +287,11 @@ export const CreateSession: React.FC = () => {
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="例：ボウル3番、テーブル5"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
 

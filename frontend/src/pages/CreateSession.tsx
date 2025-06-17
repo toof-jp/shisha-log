@@ -172,7 +172,7 @@ export const CreateSession: React.FC = () => {
                 {...register('store_name')}
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="例：Cloud 9 Lounge"
+                placeholder=""
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -189,7 +189,7 @@ export const CreateSession: React.FC = () => {
                 {...register('mix_name')}
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="例：ブルーベリーミントアイス"
+                placeholder=""
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -200,13 +200,13 @@ export const CreateSession: React.FC = () => {
 
             <div>
               <label htmlFor="creator" className="block text-sm font-medium text-gray-700">
-                作成者/ミキサー（任意）
+                作成者（任意）
               </label>
               <input
                 {...register('creator')}
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="例：アーメド"
+                placeholder=""
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -274,19 +274,19 @@ export const CreateSession: React.FC = () => {
                 {...register('notes')}
                 rows={3}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="例：素晴らしいミックス、完璧なバランス..."
+                placeholder=""
               />
             </div>
 
             <div>
               <label htmlFor="order_details" className="block text-sm font-medium text-gray-700">
-                注文詳細（任意）
+                オーダー（任意）
               </label>
               <input
                 {...register('order_details')}
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="例：ボウル3番、テーブル5"
+                placeholder=""
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

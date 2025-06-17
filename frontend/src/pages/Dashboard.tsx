@@ -1,54 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
-import type { ShishaSession, FlavorStats, StoreStats, CreatorStats } from '../types/api';
-import { formatDateTime } from '../utils/dateFormat';
+import type { FlavorStats, StoreStats, CreatorStats } from '../types/api';
 import { SessionCalendar } from '../components/SessionCalendar';
 import { DailySessionsModal } from '../components/DailySessionsModal';
-import { sortFlavorsByOrder } from '../utils/flavorSort';
 import { StatisticsChart } from '../components/StatisticsChart';
 import { StatisticsRanking } from '../components/StatisticsRanking';
 
 export const Dashboard: React.FC = () => {
-  const [recentSessions, setRecentSessions] = useState<ShishaSession[]>([]);
   const [flavorStats, setFlavorStats] = useState<FlavorStats | null>(null);
   const [storeStats, setStoreStats] = useState<StoreStats | null>(null);
   const [creatorStats, setCreatorStats] = useState<CreatorStats | null>(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'calendar' | 'all-flavors' | 'main-flavors' | 'creators' | 'stores'>('calendar');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchRecentSessions();
+    fetchStats();
   }, []);
 
-  const fetchRecentSessions = async () => {
+  const fetchStats = async () => {
     try {
-      setLoading(true);
-      
-      // Fetch recent sessions and all stats in parallel
+      // Fetch all stats in parallel
       const [sessionsResponse, flavorStatsData, storeStatsData, creatorStatsData] = await Promise.all([
-        apiClient.getSessions(5, 0),
+        apiClient.getSessions(1, 0), // Just get total count
         apiClient.getFlavorStats(),
         apiClient.getStoreStats(),
         apiClient.getCreatorStats()
       ]);
       
-      console.log('Dashboard sessions response:', sessionsResponse);
-      setRecentSessions(sessionsResponse.sessions || []);
       setTotalCount(sessionsResponse.total || 0);
       setFlavorStats(flavorStatsData);
       setStoreStats(storeStatsData);
       setCreatorStats(creatorStatsData);
     } catch (err) {
-      setError('データの読み込みに失敗しました');
       console.error('Dashboard error:', err);
-      setRecentSessions([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -83,88 +70,6 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            最近のセッション
-          </h3>
-        </div>
-        {loading ? (
-          <div className="px-4 py-5 sm:px-6">
-            <div className="text-center">読み込み中...</div>
-          </div>
-        ) : error ? (
-          <div className="px-4 py-5 sm:px-6">
-            <div className="text-center text-red-600">{error}</div>
-          </div>
-        ) : recentSessions.length === 0 ? (
-          <div className="px-4 py-5 sm:px-6">
-            <div className="text-center text-gray-500">
-              まだセッションがありません。シーシャ体験の記録を始めましょう！
-            </div>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200">
-            {recentSessions.map((session) => (
-              <li key={session.id}>
-                <Link
-                  to={`/sessions/${session.id}`}
-                  className="block hover:bg-gray-50 px-4 py-4 sm:px-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-indigo-600 truncate">
-                        {session.store_name || session.mix_name || '無題のセッション'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatDateTime(session.session_date)}
-                        {session.creator && <span> • {session.creator}</span>}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {session.flavors && session.flavors.length > 0 ? (
-                          sortFlavorsByOrder(session.flavors).map((flavor, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                            >
-                              {flavor.flavor_name || '不明'}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-400 text-xs">フレーバーなし</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="ml-4 flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-        {recentSessions.length > 0 && (
-          <div className="bg-gray-50 px-4 py-3 sm:px-6">
-            <Link
-              to="/sessions"
-              className="text-sm text-indigo-600 hover:text-indigo-900"
-            >
-              すべてのセッションを見る →
-            </Link>
-          </div>
-        )}
-      </div>
 
       {/* Tabs Section */}
       <div className="mt-8">

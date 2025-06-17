@@ -29,7 +29,7 @@ export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({
     if (isOpen && date) {
       fetchSessionsForDate();
     }
-  }, [isOpen, date, isDemo, demoSessions]);
+  }, [isOpen, date, isDemo]);
 
   const fetchSessionsForDate = async () => {
     try {

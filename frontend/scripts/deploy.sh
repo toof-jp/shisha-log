@@ -35,47 +35,62 @@ echo -e "${YELLOW}Starting deployment to S3...${NC}"
 # --cache-control sets browser caching headers
 echo "Uploading files to S3 bucket: $S3_BUCKET_NAME"
 
-# Upload HTML files with no-cache to ensure fresh content
+# First, sync all files to S3 with delete flag to remove old files
 aws s3 sync dist/ "s3://$S3_BUCKET_NAME" \
+    --delete
+
+# Update cache headers for specific file types
+# HTML files - standard cache (1 day, will be invalidated on deploy)
+aws s3 cp "s3://$S3_BUCKET_NAME" "s3://$S3_BUCKET_NAME" \
     --exclude "*" \
     --include "*.html" \
-    --cache-control "no-cache, no-store, must-revalidate" \
+    --recursive \
+    --metadata-directive REPLACE \
+    --cache-control "public, max-age=86400" \
     --content-type "text/html; charset=utf-8"
 
-# Upload CSS files with longer cache
-aws s3 sync dist/ "s3://$S3_BUCKET_NAME" \
+# Hashed assets (JS/CSS in assets folder) - long cache (1 year)
+aws s3 cp "s3://$S3_BUCKET_NAME/assets" "s3://$S3_BUCKET_NAME/assets" \
+    --recursive \
+    --metadata-directive REPLACE \
+    --cache-control "public, max-age=31536000, immutable" \
+    --content-type "application/octet-stream"
+
+# Specific content types for assets
+aws s3 cp "s3://$S3_BUCKET_NAME" "s3://$S3_BUCKET_NAME" \
     --exclude "*" \
-    --include "*.css" \
     --include "assets/*.css" \
+    --recursive \
+    --metadata-directive REPLACE \
     --cache-control "public, max-age=31536000, immutable" \
     --content-type "text/css; charset=utf-8"
 
-# Upload JavaScript files with longer cache
-aws s3 sync dist/ "s3://$S3_BUCKET_NAME" \
+aws s3 cp "s3://$S3_BUCKET_NAME" "s3://$S3_BUCKET_NAME" \
     --exclude "*" \
-    --include "*.js" \
     --include "assets/*.js" \
+    --recursive \
+    --metadata-directive REPLACE \
     --cache-control "public, max-age=31536000, immutable" \
     --content-type "application/javascript; charset=utf-8"
 
-# Upload other assets (images, fonts, etc.)
-aws s3 sync dist/ "s3://$S3_BUCKET_NAME" \
+# Other static files (favicon, etc.) - medium cache (1 day)
+aws s3 cp "s3://$S3_BUCKET_NAME" "s3://$S3_BUCKET_NAME" \
     --exclude "*.html" \
-    --exclude "*.css" \
-    --exclude "*.js" \
-    --exclude "assets/*.css" \
-    --exclude "assets/*.js" \
-    --cache-control "public, max-age=31536000"
-
-# Delete files that no longer exist
-aws s3 sync dist/ "s3://$S3_BUCKET_NAME" \
-    --delete
+    --exclude "assets/*" \
+    --recursive \
+    --metadata-directive REPLACE \
+    --cache-control "public, max-age=86400"
 
 echo -e "${GREEN}✓ Files uploaded to S3${NC}"
 
 # Create CloudFront invalidation
 echo -e "${YELLOW}Creating CloudFront invalidation...${NC}"
 
+# We invalidate all paths (/*) for simplicity
+# This ensures all routes get the latest index.html immediately
+# CloudFront provides 1000 free invalidation paths per month, which is sufficient for our deployment frequency
+# Note: Hashed assets (JS/CSS) don't actually need invalidation as their filenames change,
+# but /* is simpler to manage than maintaining a list of all SPA routes
 INVALIDATION_ID=$(aws cloudfront create-invalidation \
     --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
     --paths "/*" \

@@ -64,7 +64,53 @@ resource "aws_cloudfront_distribution" "frontend" {
     origin_id                = local.s3_origin_id
   }
 
-  # Default behavior for frontend
+  # Cache behavior for hashed assets (JS, CSS with hash in filename)
+  ordered_cache_behavior {
+    path_pattern     = "/assets/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.s3_origin_id
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"]
+      
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 31536000  # 1 year
+    default_ttl            = 31536000  # 1 year
+    max_ttl                = 31536000  # 1 year
+    compress               = true
+  }
+
+  # Cache behavior for index.html (accessed via root or any route)
+  ordered_cache_behavior {
+    path_pattern     = "index.html"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.s3_origin_id
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"]
+      
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 86400   # 1 day - safe because we invalidate on deploy
+    max_ttl                = 604800  # 1 week maximum
+    compress               = true
+  }
+
+  # Default behavior for other static files
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
@@ -81,8 +127,8 @@ resource "aws_cloudfront_distribution" "frontend" {
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
+    default_ttl            = 86400   # 1 day for other static files
+    max_ttl                = 604800  # 1 week maximum
     compress               = true
   }
 

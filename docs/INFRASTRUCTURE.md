@@ -24,9 +24,10 @@ api.shisha.toof.jp      → Lightsail (Backend API)
    - Global CDN for frontend assets
    - HTTPS termination with ACM certificate
    - Custom error pages for SPA routing (404 → index.html)
-   - Cache configuration:
-     - Default TTL: 1 hour
-     - Max TTL: 24 hours
+   - Optimized cache configuration:
+     - `/assets/*` (hashed files): 1 year cache
+     - `index.html`: 1 day cache (invalidated on deploy)
+     - Other static files: 1 day cache
 
 ### Backend Infrastructure
 

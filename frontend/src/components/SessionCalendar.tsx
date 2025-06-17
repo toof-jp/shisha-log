@@ -25,7 +25,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
 
   useEffect(() => {
     fetchCalendarData();
-  }, [year, month, isDemo]);
+  }, [year, month, isDemo, demoSessions.length]);
 
   const fetchCalendarData = async () => {
     try {

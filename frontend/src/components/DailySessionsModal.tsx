@@ -4,14 +4,23 @@ import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
 import { formatDateTime, formatDate } from '../utils/dateFormat';
 import { sortFlavorsByOrder } from '../utils/flavorSort';
+import { getSessionsByDate } from '../utils/demoData';
 
 interface DailySessionsModalProps {
   date: string;
   isOpen: boolean;
   onClose: () => void;
+  isDemo?: boolean;
+  demoSessions?: ShishaSession[];
 }
 
-export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({ date, isOpen, onClose }) => {
+export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({ 
+  date, 
+  isOpen, 
+  onClose,
+  isDemo = false,
+  demoSessions = []
+}) => {
   const [sessions, setSessions] = useState<ShishaSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -20,14 +29,19 @@ export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({ date, is
     if (isOpen && date) {
       fetchSessionsForDate();
     }
-  }, [isOpen, date]);
+  }, [isOpen, date, isDemo, demoSessions]);
 
   const fetchSessionsForDate = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await apiClient.getSessionsByDate(date);
-      setSessions(response.sessions || []);
+      if (isDemo) {
+        const demoDailySessions = getSessionsByDate(demoSessions, date);
+        setSessions(demoDailySessions);
+      } else {
+        const response = await apiClient.getSessionsByDate(date);
+        setSessions(response.sessions || []);
+      }
     } catch (err) {
       setError('セッションの読み込みに失敗しました');
       console.error('Failed to fetch sessions:', err);

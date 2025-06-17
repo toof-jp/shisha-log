@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../services/api';
-import type { CalendarData } from '../types/api';
+import type { CalendarData, ShishaSession } from '../types/api';
+import { generateCalendarData } from '../utils/demoData';
 
 interface SessionCalendarProps {
   currentDate?: Date;
   onDateClick?: (date: string) => void;
+  isDemo?: boolean;
+  demoSessions?: ShishaSession[];
 }
 
-export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = new Date(), onDateClick }) => {
+export const SessionCalendar: React.FC<SessionCalendarProps> = ({ 
+  currentDate = new Date(), 
+  onDateClick,
+  isDemo = false,
+  demoSessions = []
+}) => {
   const [calendarData, setCalendarData] = useState<CalendarData[]>([]);
   const [displayDate, setDisplayDate] = useState(currentDate);
   const [loading, setLoading] = useState(true);
@@ -17,13 +25,18 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({ currentDate = 
 
   useEffect(() => {
     fetchCalendarData();
-  }, [year, month]);
+  }, [year, month, isDemo, demoSessions]);
 
   const fetchCalendarData = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.getCalendarData(year, month + 1);
-      setCalendarData(data);
+      if (isDemo) {
+        const data = generateCalendarData(demoSessions, year, month + 1);
+        setCalendarData(data);
+      } else {
+        const data = await apiClient.getCalendarData(year, month + 1);
+        setCalendarData(data);
+      }
     } catch (error) {
       console.error('Failed to fetch calendar data:', error);
     } finally {

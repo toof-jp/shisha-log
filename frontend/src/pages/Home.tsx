@@ -40,6 +40,12 @@ export const Home: React.FC = () => {
                 >
                   ログイン
                 </Link>
+                <Link
+                  to="/demo"
+                  className="inline-flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  デモを試す
+                </Link>
               </div>
             )}
           </div>

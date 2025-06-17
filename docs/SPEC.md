@@ -18,6 +18,7 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - Discover new combinations based on past experiences
 - Maintain a personal history of shisha sessions
 - Simple and intuitive interface for quick logging
+- Try before you sign up with interactive demo mode
 
 ## 2. Core Features
 
@@ -25,6 +26,7 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - **User Registration**: Create account with username and password
 - **User Login**: Secure authentication with JWT tokens
 - **Password Reset**: Secure password recovery flow
+- **Demo Mode**: Try the application without registration using pre-populated demo data
 
 ### 2.2 Session Management
 - **Create Session**: Log new shisha sessions with details
@@ -60,6 +62,9 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - `POST /api/v1/auth/login` - User login
 - `POST /api/v1/auth/refresh` - Refresh JWT token
 - `POST /api/v1/auth/logout` - User logout
+
+#### Demo Mode
+- `GET /demo` - Access demo mode with sample data (no authentication required)
 
 #### User Management
 - `GET /api/v1/users/me` - Get current user
@@ -176,7 +181,14 @@ interface CreatorStats {
 1. **Landing Page**: Welcome message and login/register options
 2. **Login Page**: Username and password fields
 3. **Register Page**: Account creation form
-4. **Dashboard**: 
+4. **Demo Mode**: 
+   - Accessible via `/demo` route without authentication
+   - Shows 50 pre-generated demo sessions over past 60 days
+   - Full statistics and calendar view with demo data
+   - Demo banner at top with "Sign in to save your own sessions" message
+   - All features available in read-only mode
+   - Japanese store names and realistic flavor combinations
+5. **Dashboard**: 
    - List of recent sessions
    - Total session count
    - Statistics tab with:
@@ -185,9 +197,9 @@ interface CreatorStats {
      - Creator statistics with rankings and pie charts
    - Calendar view with session indicators
    - Tabbed interface for Calendar/Statistics views
-5. **Session List**: Full paginated list of sessions
-6. **Session Detail**: View/edit individual session
-7. **New Session**: Form to create new session
+6. **Session List**: Full paginated list of sessions
+7. **Session Detail**: View/edit individual session
+8. **New Session**: Form to create new session
 
 ### 4.2 UI Components
 - **Navigation Bar**: App logo, user menu, logout

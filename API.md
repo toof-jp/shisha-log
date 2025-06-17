@@ -338,6 +338,30 @@ Check API health status.
 }
 ```
 
+### Demo Mode
+
+#### GET /demo
+Access demo mode with sample data. No authentication required.
+
+**Features:**
+- Displays 50 pre-generated demo sessions
+- Sessions are spread over the past 60 days
+- Includes various Japanese store names, creator names, and flavor combinations
+- Shows full statistics (calendar view, flavor stats, store stats, creator stats)
+- Demo banner at top with link to login page
+- All features are read-only in demo mode
+
+**Response:**
+The demo route serves the frontend application with demo data pre-loaded. Users can:
+- View the calendar with demo sessions
+- Browse through 50 sample sessions
+- View flavor statistics and rankings
+- View store visit statistics
+- View creator/mixer statistics
+- Click on calendar dates to see sessions for that day
+
+**Note:** Demo data is generated dynamically but consistently, showing realistic usage patterns with Japanese store names (e.g., "シーシャバー 渋谷", "煙草屋 新宿") and various flavor combinations.
+
 ## Error Responses
 
 All error responses follow this format:

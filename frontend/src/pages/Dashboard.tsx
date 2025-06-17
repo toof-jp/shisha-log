@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/api';
 import type { ShishaSession, FlavorStats, StoreStats, CreatorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
@@ -11,7 +10,6 @@ import { StatisticsChart } from '../components/StatisticsChart';
 import { StatisticsRanking } from '../components/StatisticsRanking';
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
   const [recentSessions, setRecentSessions] = useState<ShishaSession[]>([]);
   const [flavorStats, setFlavorStats] = useState<FlavorStats | null>(null);
   const [storeStats, setStoreStats] = useState<StoreStats | null>(null);

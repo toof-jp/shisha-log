@@ -5,6 +5,7 @@
 .PHONY: deploy-frontend deploy-backend deploy-all
 .PHONY: infra-init infra-plan infra-apply infra-destroy infra-destroy-force infra-output infra-apply-module
 .PHONY: db-migrate db-reset db-status
+.PHONY: backup-test backup-trigger backup-list backup-download
 .PHONY: route53-list-zones route53-find-zone route53-list-records route53-test-dns
 .PHONY: create-acm-cert list-acm-certs check-acm-cert manage-acm-cert cert-validation-status
 .PHONY: setup-env setup-ecr setup-all supabase-types dev
@@ -38,8 +39,14 @@ help:
 	@echo ""
 	@echo "Database Migration Commands:"
 	@echo "  make db-migrate         - Apply database migrations"
-	@echo "  make db-reset        - Reset database with new schema (WARNING: deletes all data)"
+	@echo "  make db-reset           - Reset database with new schema (WARNING: deletes all data)"
 	@echo "  make db-status          - Check current database schema status"
+	@echo ""
+	@echo "Backup Commands:"
+	@echo "  make backup-test        - Test backup Lambda function locally"
+	@echo "  make backup-trigger     - Manually trigger backup Lambda function"
+	@echo "  make backup-list        - List recent backups in S3"
+	@echo "  make backup-download    - Download latest backup from S3"
 	@echo ""
 	@echo "Infrastructure Commands:"
 	@echo "  make infra-init         - Initialize Terraform"
@@ -415,3 +422,35 @@ db-status:
 	echo ""; \
 	echo "Session flavors columns:"; \
 	psql "$$DATABASE_URL" -c "\d public.session_flavors" | grep -E "Column|flavor_order|--" || echo "Table not found"
+
+# Backup Commands
+backup-test:
+	@echo "Testing backup Lambda function locally..."
+	@cd infra/modules/backup && python3 -c "import os; os.environ.update({'DATABASE_URL': '${DATABASE_URL}', 'S3_BUCKET': 'test-bucket', 'PROJECT_NAME': 'shisha-log', 'ENVIRONMENT': 'test'}); from lambda_function import handler; print(handler({}, {}))"
+
+backup-trigger:
+	@echo "Manually triggering backup Lambda function..."
+	@FUNCTION_NAME=$$(cd infra && terraform output -raw backup_lambda_function 2>/dev/null); \
+	if [ -z "$$FUNCTION_NAME" ]; then echo "Error: Backup Lambda function not found. Run 'make infra-apply' first."; exit 1; fi; \
+	aws lambda invoke \
+		--function-name $$FUNCTION_NAME \
+		--invocation-type Event \
+		--cli-binary-format raw-in-base64-out \
+		/tmp/backup-response.json; \
+	echo "Backup triggered. Check CloudWatch logs for details."
+
+backup-list:
+	@echo "Listing recent backups..."
+	@S3_BUCKET=$$(cd infra && terraform output -raw backup_s3_bucket 2>/dev/null); \
+	if [ -z "$$S3_BUCKET" ]; then echo "Error: Backup S3 bucket not found. Run 'make infra-apply' first."; exit 1; fi; \
+	aws s3 ls s3://$$S3_BUCKET/backups/ --recursive | sort -r | head -20
+
+backup-download:
+	@echo "Downloading latest backup..."
+	@S3_BUCKET=$$(cd infra && terraform output -raw backup_s3_bucket 2>/dev/null); \
+	if [ -z "$$S3_BUCKET" ]; then echo "Error: Backup S3 bucket not found. Run 'make infra-apply' first."; exit 1; fi; \
+	LATEST_BACKUP=$$(aws s3 ls s3://$$S3_BUCKET/backups/ --recursive | sort -r | head -1 | awk '{print $$4}'); \
+	if [ -z "$$LATEST_BACKUP" ]; then echo "Error: No backups found"; exit 1; fi; \
+	echo "Downloading $$LATEST_BACKUP..."; \
+	aws s3 cp s3://$$S3_BUCKET/$$LATEST_BACKUP ./; \
+	echo "Backup downloaded: $$(basename $$LATEST_BACKUP)"

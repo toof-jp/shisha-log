@@ -54,6 +54,7 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 - **Backend**: Go REST API
 - **Database**: PostgreSQL (via Supabase)
 - **Deployment**: AWS Lightsail with Docker
+- **Backup Infrastructure**: AWS Lambda + S3 + EventBridge for automated backups
 
 ### 3.2 API Endpoints
 
@@ -245,6 +246,13 @@ interface CreatorStats {
 - Input validation and sanitization
 - SQL injection prevention
 - XSS protection
+
+### 5.4 Backup and Recovery
+- **Automated Backups**: Weekly database backups every Monday at 9:00 AM JST
+- **Backup Storage**: Encrypted storage in S3 with 30-day retention
+- **Backup Format**: Compressed SQL dumps (gzip)
+- **Manual Backup**: On-demand backup capability via command line
+- **Recovery Process**: Download and restore from S3 backups
 
 ## 6. Performance Requirements
 

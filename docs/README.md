@@ -9,7 +9,9 @@ Welcome to the Shisha Log documentation. This directory contains comprehensive g
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture, technology stack, and design decisions
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Comprehensive deployment guide including infrastructure, CI/CD, and operations
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Local development setup and workflow
+- **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)** - AWS infrastructure components and backup system
 - **[QUICK_START.md](./QUICK_START.md)** - Get started quickly with the application
+- **[SPEC.md](./SPEC.md)** - Product specification and feature documentation
 - **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Infrastructure & DevOps

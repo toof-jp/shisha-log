@@ -156,3 +156,9 @@ variable "route53_hosted_zone_id" {
   type        = string
   default     = ""
 }
+
+variable "backup_retention_days" {
+  description = "Number of days to retain database backups in S3"
+  type        = number
+  default     = 30
+}

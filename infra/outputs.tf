@@ -114,3 +114,19 @@ output "acm_certificate_domains" {
     ])
   }
 }
+
+# Backup outputs
+output "backup_s3_bucket" {
+  description = "S3 bucket name for database backups"
+  value       = module.backup.backup_bucket_name
+}
+
+output "backup_lambda_function" {
+  description = "Lambda function name for database backups"
+  value       = module.backup.lambda_function_name
+}
+
+output "backup_schedule" {
+  description = "Backup schedule information"
+  value = "Weekly on Monday at 9:00 AM JST (0:00 UTC)"
+}

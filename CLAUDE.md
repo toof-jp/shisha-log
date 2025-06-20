@@ -9,6 +9,7 @@ Shisha Log is a full-stack application for tracking and managing shisha (hookah)
 - **Frontend**: React SPA with TypeScript and Vite
 - **Database**: PostgreSQL managed through Supabase
 - **Infrastructure**: AWS Lightsail deployment with Terraform
+- **Backups**: Automated weekly backups to S3 using Lambda and EventBridge
 
 ## Development Commands
 
@@ -39,6 +40,13 @@ Shisha Log is a full-stack application for tracking and managing shisha (hookah)
 - **Initialize**: `make infra-init`
 - **Plan changes**: `make infra-plan`
 - **Apply changes**: `make infra-apply`
+
+### Database Backups
+- **Test backup locally**: `make backup-test`
+- **Trigger manual backup**: `make backup-trigger`
+- **List recent backups**: `make backup-list`
+- **Download latest backup**: `make backup-download`
+- **Automatic backups**: Scheduled every Monday at 9:00 AM JST
 
 ## Architecture Overview
 

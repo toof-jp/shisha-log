@@ -98,3 +98,13 @@ module "route53" {
     Environment = var.environment
   }
 }
+
+# Database backup configuration
+module "backup" {
+  source = "./modules/backup"
+  
+  project_name          = var.project_name
+  environment           = var.environment
+  database_url          = var.database_url
+  backup_retention_days = var.backup_retention_days
+}

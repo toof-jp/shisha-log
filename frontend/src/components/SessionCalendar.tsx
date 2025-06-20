@@ -19,6 +19,8 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const [calendarData, setCalendarData] = useState<CalendarData[]>([]);
   const [displayDate, setDisplayDate] = useState(currentDate);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
 
@@ -41,7 +43,11 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
 
   const fetchCalendarData = async () => {
     try {
-      setLoading(true);
+      // Only show loading state on initial load
+      if (isInitialLoad) {
+        setLoading(true);
+      }
+      
       if (isDemo) {
         const data = generateCalendarData(demoSessions, year, month + 1);
         setCalendarData(data);
@@ -49,10 +55,16 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
         const data = await apiClient.getCalendarData(year, month + 1);
         setCalendarData(data);
       }
+      
+      // Mark initial load as complete
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     } catch (error) {
       console.error('Failed to fetch calendar data:', error);
     } finally {
       setLoading(false);
+      setIsNavigating(false);
     }
   };
 
@@ -130,6 +142,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     e.stopPropagation();
     // Blur the button to prevent focus-related scrolling
     e.currentTarget.blur();
+    setIsNavigating(true);
     setDisplayDate(new Date(year, month - 1));
   };
 
@@ -138,6 +151,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     e.stopPropagation();
     // Blur the button to prevent focus-related scrolling
     e.currentTarget.blur();
+    setIsNavigating(true);
     setDisplayDate(new Date(year, month + 1));
   };
 
@@ -146,6 +160,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     e.stopPropagation();
     // Blur the button to prevent focus-related scrolling
     e.currentTarget.blur();
+    setIsNavigating(true);
     setDisplayDate(new Date());
   };
 
@@ -198,26 +213,41 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
         </div>
       </div>
 
-      <div className="min-h-[300px] sm:min-h-[400px]">
+      <div className="min-h-[300px] sm:min-h-[400px] relative">
         {loading ? (
           <div className="flex items-center justify-center h-[300px] sm:h-[400px]">
             <div className="text-gray-500">読み込み中...</div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
-              {dayNames.map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-xs sm:text-sm font-medium text-gray-700 py-1 sm:py-2"
-                >
-                  {day}
+            <div className={`transition-opacity duration-200 ${isNavigating ? 'opacity-50' : 'opacity-100'}`}>
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
+                {dayNames.map((day) => (
+                  <div
+                    key={day}
+                    className="text-center text-xs sm:text-sm font-medium text-gray-700 py-1 sm:py-2"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                {renderCalendarDays()}
+              </div>
+            </div>
+            {isNavigating && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-white bg-opacity-90 rounded-lg px-4 py-2">
+                  <div className="flex items-center space-x-2">
+                    <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600 text-sm">読み込み中...</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-              {renderCalendarDays()}
-            </div>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { apiClient } from '../services/api';
 import type { CalendarData, ShishaSession } from '../types/api';
 import { generateCalendarData } from '../utils/demoData';
@@ -20,6 +20,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const [displayDate, setDisplayDate] = useState(currentDate);
   const [loading, setLoading] = useState(true);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef<number>(0);
 
   const year = displayDate.getFullYear();
   const month = displayDate.getMonth();
@@ -27,6 +28,16 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   useEffect(() => {
     fetchCalendarData();
   }, [year, month, isDemo, demoSessions.length]);
+
+  // Save scroll position before render
+  useLayoutEffect(() => {
+    scrollPositionRef.current = window.scrollY;
+  });
+
+  // Restore scroll position after render
+  useLayoutEffect(() => {
+    window.scrollTo(0, scrollPositionRef.current);
+  }, [displayDate]);
 
   const fetchCalendarData = async () => {
     try {
@@ -114,34 +125,28 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     return days;
   };
 
-  const handlePreviousMonth = (e: React.MouseEvent) => {
+  const handlePreviousMonth = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const scrollY = window.scrollY;
+    e.stopPropagation();
+    // Blur the button to prevent focus-related scrolling
+    e.currentTarget.blur();
     setDisplayDate(new Date(year, month - 1));
-    // Restore scroll position after state update
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   };
 
-  const handleNextMonth = (e: React.MouseEvent) => {
+  const handleNextMonth = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const scrollY = window.scrollY;
+    e.stopPropagation();
+    // Blur the button to prevent focus-related scrolling
+    e.currentTarget.blur();
     setDisplayDate(new Date(year, month + 1));
-    // Restore scroll position after state update
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   };
 
-  const handleToday = (e: React.MouseEvent) => {
+  const handleToday = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const scrollY = window.scrollY;
+    e.stopPropagation();
+    // Blur the button to prevent focus-related scrolling
+    e.currentTarget.blur();
     setDisplayDate(new Date());
-    // Restore scroll position after state update
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   };
 
   const monthNames = [
@@ -169,46 +174,53 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
           <button
             type="button"
             onClick={handlePreviousMonth}
-            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            tabIndex={-1}
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors focus:outline-none"
           >
             <span className="hidden sm:inline">＜ </span>前月
           </button>
           <button
             type="button"
             onClick={handleToday}
-            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors"
+            tabIndex={-1}
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors focus:outline-none"
           >
             今月
           </button>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            tabIndex={-1}
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors focus:outline-none"
           >
             次月<span className="hidden sm:inline"> ＞</span>
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8 text-gray-500">読み込み中...</div>
-      ) : (
-        <>
-          <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
-            {dayNames.map((day) => (
-              <div
-                key={day}
-                className="text-center text-xs sm:text-sm font-medium text-gray-700 py-1 sm:py-2"
-              >
-                {day}
-              </div>
-            ))}
+      <div className="min-h-[300px] sm:min-h-[400px]">
+        {loading ? (
+          <div className="flex items-center justify-center h-[300px] sm:h-[400px]">
+            <div className="text-gray-500">読み込み中...</div>
           </div>
-          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-            {renderCalendarDays()}
-          </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
+              {dayNames.map((day) => (
+                <div
+                  key={day}
+                  className="text-center text-xs sm:text-sm font-medium text-gray-700 py-1 sm:py-2"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+              {renderCalendarDays()}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

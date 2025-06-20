@@ -210,7 +210,7 @@ if [ \$? -eq 0 ]; then
 # HTTP server - redirect all traffic to HTTPS
 server {
     listen 80;
-    server_name $DOMAIN;
+    server_name ${domain_name};
     
     # Allow Let's Encrypt ACME challenge
     location /.well-known/acme-challenge/ {
@@ -226,11 +226,11 @@ server {
 # HTTPS server
 server {
     listen 443 ssl;
-    server_name $DOMAIN;
+    server_name ${domain_name};
 
     # SSL configuration (managed by Certbot)
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/${domain_name}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${domain_name}/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 

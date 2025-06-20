@@ -19,15 +19,26 @@ mkdir -p "$BUILD_DIR"
 # Copy Lambda function
 cp "$SCRIPT_DIR/lambda_function.py" "$BUILD_DIR/index.py"
 
-# Install psycopg2-binary in the build directory
-echo "Installing psycopg2-binary..."
-pip install psycopg2-binary -t "$BUILD_DIR" --no-deps
+# Install dependencies for Lambda runtime
+# Using Python 3.11 and installing with all dependencies
+echo "Installing dependencies for Lambda..."
+pip install \
+    --platform manylinux2014_x86_64 \
+    --implementation cp \
+    --python-version 311 \
+    --only-binary=:all: \
+    --upgrade \
+    --target "$BUILD_DIR" \
+    psycopg2-binary zstandard
 
 # Create deployment package
 cd "$BUILD_DIR"
 zip -r "$OUTPUT_ZIP" .
 
 echo "Lambda deployment package created: $OUTPUT_ZIP"
+
+# Display package size
+echo "Package size: $(du -h "$OUTPUT_ZIP" | cut -f1)"
 
 # Clean up
 rm -rf "$BUILD_DIR"

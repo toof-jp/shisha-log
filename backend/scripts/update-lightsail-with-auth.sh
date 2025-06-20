@@ -28,7 +28,14 @@ if [ -z "$REGISTRY_USERNAME" ] || [ -z "$REGISTRY_PASSWORD" ]; then
     exit 1
 fi
 
-LIGHTSAIL_IP="35.75.202.209"
+# Get Lightsail IP from Terraform output
+LIGHTSAIL_IP=$(cd "$PROJECT_ROOT/infra" && terraform output -raw lightsail_static_ip 2>/dev/null)
+if [ -z "$LIGHTSAIL_IP" ]; then
+    echo "ERROR: Could not retrieve Lightsail IP from Terraform output"
+    exit 1
+fi
+
+echo "Using Lightsail IP: $LIGHTSAIL_IP"
 
 echo "1. Updating Lightsail container with provided credentials..."
 

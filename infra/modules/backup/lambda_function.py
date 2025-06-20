@@ -2,7 +2,7 @@ import os
 import json
 import boto3
 import tempfile
-import gzip
+import zstandard as zstd
 from datetime import datetime
 from urllib.parse import urlparse
 import psycopg2
@@ -83,7 +83,7 @@ def handler(event, context):
     
     # Generate backup filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup_filename = f"{project_name}_{environment}_{db_name}_{timestamp}.sql.gz"
+    backup_filename = f"{project_name}_{environment}_{db_name}_{timestamp}.sql.zst"
     
     # Create temporary file for backup
     with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False, suffix='.sql') as tmp_file:
@@ -137,16 +137,17 @@ def handler(event, context):
             cursor.close()
             conn.close()
             
-            print(f"SQL dump completed, compressing...")
+            print(f"SQL dump completed, compressing with zstd...")
             
-            # Compress the SQL file
-            gzip_path = tmp_path + '.gz'
+            # Compress the SQL file with zstd
+            zst_path = tmp_path + '.zst'
+            cctx = zstd.ZstdCompressor(level=19)  # Max compression level for better efficiency
             with open(tmp_path, 'rb') as f_in:
-                with gzip.open(gzip_path, 'wb', compresslevel=9) as f_out:
-                    f_out.writelines(f_in)
+                with open(zst_path, 'wb') as f_out:
+                    f_out.write(cctx.compress(f_in.read()))
             
-            file_size = os.path.getsize(gzip_path)
-            print(f"Backup compressed successfully, file size: {file_size} bytes")
+            file_size = os.path.getsize(zst_path)
+            print(f"Backup compressed successfully with zstd, file size: {file_size} bytes")
             
             # Upload to S3
             s3_client = boto3.client('s3')
@@ -154,18 +155,20 @@ def handler(event, context):
             
             print(f"Uploading backup to S3: s3://{s3_bucket}/{s3_key}")
             
-            with open(gzip_path, 'rb') as backup_file:
+            with open(zst_path, 'rb') as backup_file:
                 s3_client.upload_fileobj(
                     backup_file,
                     s3_bucket,
                     s3_key,
                     ExtraArgs={
                         'ServerSideEncryption': 'AES256',
+                        'ContentType': 'application/zstd',
                         'Metadata': {
                             'project': project_name,
                             'environment': environment,
                             'database': db_name,
-                            'timestamp': timestamp
+                            'timestamp': timestamp,
+                            'compression': 'zstd'
                         }
                     }
                 )
@@ -173,7 +176,7 @@ def handler(event, context):
             print(f"Backup uploaded successfully to S3")
             
             # Clean up compressed file
-            os.unlink(gzip_path)
+            os.unlink(zst_path)
             
             # Return success response
             return {

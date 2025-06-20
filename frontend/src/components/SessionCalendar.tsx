@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiClient } from '../services/api';
 import type { CalendarData, ShishaSession } from '../types/api';
 import { generateCalendarData } from '../utils/demoData';
@@ -19,6 +19,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const [calendarData, setCalendarData] = useState<CalendarData[]>([]);
   const [displayDate, setDisplayDate] = useState(currentDate);
   const [loading, setLoading] = useState(true);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const year = displayDate.getFullYear();
   const month = displayDate.getMonth();
@@ -113,16 +114,34 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
     return days;
   };
 
-  const handlePreviousMonth = () => {
+  const handlePreviousMonth = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const scrollY = window.scrollY;
     setDisplayDate(new Date(year, month - 1));
+    // Restore scroll position after state update
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
 
-  const handleNextMonth = () => {
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const scrollY = window.scrollY;
     setDisplayDate(new Date(year, month + 1));
+    // Restore scroll position after state update
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
 
-  const handleToday = () => {
+  const handleToday = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const scrollY = window.scrollY;
     setDisplayDate(new Date());
+    // Restore scroll position after state update
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
 
   const monthNames = [
@@ -136,7 +155,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const monthlyTotal = calendarData.reduce((sum, day) => sum + day.count, 0);
 
   return (
-    <div className="bg-white shadow rounded-lg p-3 sm:p-4 md:p-6">
+    <div ref={calendarRef} className="bg-white shadow rounded-lg p-3 sm:p-4 md:p-6">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div>
           <h2 className="text-base sm:text-lg font-semibold text-gray-900">
@@ -148,18 +167,21 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
         </div>
         <div className="flex space-x-1 sm:space-x-2">
           <button
+            type="button"
             onClick={handlePreviousMonth}
             className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
           >
             <span className="hidden sm:inline">＜ </span>前月
           </button>
           <button
+            type="button"
             onClick={handleToday}
             className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md transition-colors"
           >
             今月
           </button>
           <button
+            type="button"
             onClick={handleNextMonth}
             className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
           >

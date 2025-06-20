@@ -132,12 +132,20 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
 
   const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
+  // Calculate monthly total sessions
+  const monthlyTotal = calendarData.reduce((sum, day) => sum + day.count, 0);
+
   return (
     <div className="bg-white shadow rounded-lg p-3 sm:p-4 md:p-6">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-          {year}年 {monthNames[month]}
-        </h2>
+        <div>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+            {year}年 {monthNames[month]}
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            月間セッション数: <span className="font-semibold text-indigo-600">{monthlyTotal}</span>
+          </p>
+        </div>
         <div className="flex space-x-1 sm:space-x-2">
           <button
             onClick={handlePreviousMonth}

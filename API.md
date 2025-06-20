@@ -234,6 +234,9 @@ Get calendar data showing session counts by date.
 ]
 ```
 
+**Frontend Display:**
+The calendar component also displays the monthly total session count by summing all daily counts. This is calculated client-side from the response data.
+
 #### GET /sessions/by-date
 Get all sessions for a specific date.
 

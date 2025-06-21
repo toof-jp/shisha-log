@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import type { ShishaSession } from '../types/api';
@@ -48,7 +48,7 @@ export const Sessions: React.FC = () => {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, offset]);
+  }, [hasMore, loadingMore, offset, fetchMoreSessions]);
 
   const fetchSessions = async (newOffset: number) => {
     try {
@@ -68,7 +68,7 @@ export const Sessions: React.FC = () => {
     }
   };
 
-  const fetchMoreSessions = async () => {
+  const fetchMoreSessions = useCallback(async () => {
     try {
       setLoadingMore(true);
       const response = await apiClient.getSessions(limit, offset);
@@ -82,7 +82,7 @@ export const Sessions: React.FC = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [offset]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('このセッションを削除してもよろしいですか？')) return;
@@ -91,7 +91,7 @@ export const Sessions: React.FC = () => {
       await apiClient.deleteSession(id);
       // Remove the deleted session from the list
       setSessions(prev => prev.filter(session => session.id !== id));
-    } catch (err) {
+    } catch {
       alert('セッションの削除に失敗しました');
     }
   };

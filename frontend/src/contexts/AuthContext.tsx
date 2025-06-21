@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, LoginRequest, RegisterRequest } from '../types/api';
 import { apiClient } from '../services/api';
@@ -12,15 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -49,21 +41,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (data: LoginRequest) => {
-    try {
-      const response = await apiClient.login(data);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.login(data);
+    setUser(response.user);
   };
 
   const register = async (data: RegisterRequest) => {
-    try {
-      const response = await apiClient.register(data);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.register(data);
+    setUser(response.user);
   };
 
   const logout = () => {

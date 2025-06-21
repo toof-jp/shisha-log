@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDemo } from '../contexts/DemoContext';
+import { useDemo } from '../hooks';
 import type { ShishaSession, FlavorStats, StoreStats, CreatorStats } from '../types/api';
 import { formatDateTime } from '../utils/dateFormat';
 import { SessionCalendar } from '../components/SessionCalendar';

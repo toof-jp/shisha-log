@@ -37,7 +37,7 @@ export const SessionDetail: React.FC = () => {
     try {
       await apiClient.deleteSession(id!);
       navigate('/sessions');
-    } catch (err) {
+    } catch {
       alert('セッションの削除に失敗しました');
     }
   };

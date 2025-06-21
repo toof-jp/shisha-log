@@ -51,11 +51,7 @@ export const CreateSession: React.FC = () => {
 
   useEffect(() => {
     if (isEditMode && id) {
-      fetchSession();
-    }
-  }, [id, isEditMode]);
-
-  const fetchSession = async () => {
+      const fetchSession = async () => {
     try {
       setLoading(true);
       const session = await apiClient.getSession(id!);
@@ -82,6 +78,9 @@ export const CreateSession: React.FC = () => {
       setLoading(false);
     }
   };
+      fetchSession();
+    }
+  }, [id, isEditMode]);
 
   const onSubmit = async (data: SessionFormData) => {
     try {

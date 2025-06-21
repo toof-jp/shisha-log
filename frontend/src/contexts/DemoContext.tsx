@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { ShishaSession } from '../types/api';
 import { generateDemoSessions } from '../utils/demoData';
@@ -9,7 +9,7 @@ interface DemoContextType {
   demoSessions: ShishaSession[];
 }
 
-const DemoContext = createContext<DemoContextType | undefined>(undefined);
+export const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 const EMPTY_SESSIONS: ShishaSession[] = [];
 
@@ -46,10 +46,3 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useDemo = () => {
-  const context = useContext(DemoContext);
-  if (context === undefined) {
-    throw new Error('useDemo must be used within a DemoProvider');
-  }
-  return context;
-};

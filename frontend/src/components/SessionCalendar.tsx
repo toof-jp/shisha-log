@@ -28,20 +28,7 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const month = displayDate.getMonth();
 
   useEffect(() => {
-    fetchCalendarData();
-  }, [year, month, isDemo, demoSessions.length]);
-
-  // Save scroll position before render
-  useLayoutEffect(() => {
-    scrollPositionRef.current = window.scrollY;
-  });
-
-  // Restore scroll position after render
-  useLayoutEffect(() => {
-    window.scrollTo(0, scrollPositionRef.current);
-  }, [displayDate]);
-
-  const fetchCalendarData = async () => {
+    const fetchCalendarData = async () => {
     try {
       // Only show loading state on initial load
       if (isInitialLoad) {
@@ -67,6 +54,18 @@ export const SessionCalendar: React.FC<SessionCalendarProps> = ({
       setIsNavigating(false);
     }
   };
+    fetchCalendarData();
+  }, [year, month, isDemo, demoSessions.length]);
+
+  // Save scroll position before render
+  useLayoutEffect(() => {
+    scrollPositionRef.current = window.scrollY;
+  });
+
+  // Restore scroll position after render
+  useLayoutEffect(() => {
+    window.scrollTo(0, scrollPositionRef.current);
+  }, [displayDate]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();

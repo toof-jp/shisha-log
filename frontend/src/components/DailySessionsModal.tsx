@@ -27,11 +27,7 @@ export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({
 
   useEffect(() => {
     if (isOpen && date) {
-      fetchSessionsForDate();
-    }
-  }, [isOpen, date, isDemo]);
-
-  const fetchSessionsForDate = async () => {
+      const fetchSessionsForDate = async () => {
     try {
       setLoading(true);
       setError('');
@@ -49,6 +45,9 @@ export const DailySessionsModal: React.FC<DailySessionsModalProps> = ({
       setLoading(false);
     }
   };
+      fetchSessionsForDate();
+    }
+  }, [isOpen, date, isDemo]);
 
   if (!isOpen) return null;
 

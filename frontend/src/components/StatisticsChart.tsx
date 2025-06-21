@@ -1,5 +1,5 @@
 import React from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, TooltipItem } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -81,7 +81,7 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function(context: TooltipItem<'pie'>) {
             const label = context.label || '';
             const value = context.parsed || 0;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);

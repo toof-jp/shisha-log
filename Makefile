@@ -55,6 +55,7 @@ help:
 	@echo "  make infra-apply        - Apply infrastructure changes"
 	@echo "  make infra-destroy      - Destroy infrastructure (with confirmation)"
 	@echo "  make infra-destroy-force - Force destroy without confirmation"
+	@echo "  make infra-destroy-except-backup - Destroy all except S3 backup bucket"
 	@echo "  make infra-output       - Show Terraform outputs"
 	@echo ""
 	@echo "Docker Commands:"
@@ -285,6 +286,27 @@ infra-destroy-force:
 		-var="registry_username=$$REGISTRY_USERNAME" \
 		-var="registry_password=$$REGISTRY_PASSWORD" \
 		-auto-approve
+
+# Destroy all infrastructure except S3 backup bucket
+infra-destroy-except-backup:
+	@echo "Destroying infrastructure except S3 backup bucket..."
+	@echo "WARNING: This will destroy all infrastructure except the backup bucket. Press Ctrl+C to cancel."
+	@sleep 3
+	@echo "Note: The S3 backup bucket has prevent_destroy=true and will be preserved."
+	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
+	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
+		-target=module.lightsail \
+		-target=module.frontend \
+		-target=module.frontend_cloudfront \
+		-target=module.route53 \
+		-target=module.acm \
+		-var="supabase_url=$$SUPABASE_URL" \
+		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
+		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
+		-var="jwt_secret=$$JWT_SECRET" \
+		-var="database_url=$$DATABASE_URL" \
+		-var="registry_username=$$REGISTRY_USERNAME" \
+		-var="registry_password=$$REGISTRY_PASSWORD"
 
 infra-output:
 	cd infra && terraform output

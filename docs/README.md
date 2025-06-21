@@ -17,6 +17,7 @@ Welcome to the Shisha Log documentation. This directory contains comprehensive g
 ### Infrastructure & DevOps
 
 - **[DNS_SETUP.md](./DNS_SETUP.md)** - DNS configuration guide (Route 53 and other providers)
+- **[BACKUP_PROTECTION.md](./BACKUP_PROTECTION.md)** - Database backup protection and management
 - **[backend/ECR_PUBLIC_SETUP.md](./backend/ECR_PUBLIC_SETUP.md)** - AWS ECR Public registry setup
 - **[backend/ECR_ALIAS_SETUP.md](./backend/ECR_ALIAS_SETUP.md)** - How to find your ECR alias
 - **[backend/SSL_AUTOMATION.md](./backend/SSL_AUTOMATION.md)** - SSL certificate automation for Lightsail

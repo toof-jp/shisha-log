@@ -2,6 +2,10 @@
 resource "aws_s3_bucket" "backup" {
   bucket = "${var.project_name}-${var.environment}-db-backups"
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-db-backups"
     Project     = var.project_name

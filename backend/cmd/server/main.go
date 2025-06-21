@@ -30,7 +30,7 @@ import (
 // @license.url https://opensource.org/licenses/MIT
 
 // @host localhost:8080
-// @BasePath /api/v1
+// @BasePath /v1
 
 // @securityDefinitions.apikey Bearer
 // @in header
@@ -102,7 +102,7 @@ func main() {
 	})
 
 	// API routes
-	apiGroup := e.Group("/api/v1")
+	apiGroup := e.Group("/v1")
 
 	// API health check
 	apiGroup.GET("/health", func(c echo.Context) error {

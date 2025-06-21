@@ -16,7 +16,7 @@ Welcome to the Shisha Log documentation. This directory contains comprehensive g
 
 ### Infrastructure & DevOps
 
-- **[ROUTE53_DNS_SETUP.md](./ROUTE53_DNS_SETUP.md)** - Route 53 DNS configuration and management
+- **[DNS_SETUP.md](./DNS_SETUP.md)** - DNS configuration guide (Route 53 and other providers)
 - **[backend/ECR_PUBLIC_SETUP.md](./backend/ECR_PUBLIC_SETUP.md)** - AWS ECR Public registry setup
 - **[backend/ECR_ALIAS_SETUP.md](./backend/ECR_ALIAS_SETUP.md)** - How to find your ECR alias
 - **[backend/SSL_AUTOMATION.md](./backend/SSL_AUTOMATION.md)** - SSL certificate automation for Lightsail
@@ -30,7 +30,7 @@ Welcome to the Shisha Log documentation. This directory contains comprehensive g
 
 ### For DevOps/Deployment
 1. Follow [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions
-2. Configure DNS using [ROUTE53_DNS_SETUP.md](./ROUTE53_DNS_SETUP.md)
+2. Configure DNS using [DNS_SETUP.md](./DNS_SETUP.md)
 3. Set up container registry with [backend/ECR_PUBLIC_SETUP.md](./backend/ECR_PUBLIC_SETUP.md)
 
 ### For Troubleshooting
@@ -67,5 +67,6 @@ When updating documentation:
 
 ## API Documentation
 
-- Backend API documentation is available at `/api/v1/docs` when the server is running
-- API specification is maintained in the root directory as `API.md`
+- **Swagger UI**: Available at `/swagger/index.html` when the backend server is running
+- **OpenAPI Specification**: Auto-generated in `backend/docs/swagger.json` (Swagger 2.0) and `backend/docs/openapi.json` (OpenAPI 3.0)
+- **Type Generation**: Frontend TypeScript types are automatically generated from the OpenAPI spec

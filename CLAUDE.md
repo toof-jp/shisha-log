@@ -56,7 +56,7 @@ Shisha Log is a full-stack application for tracking and managing shisha (hookah)
 - **Database Access**: 
   - Direct PostgreSQL connection for authentication data
   - Supabase client for application data (sessions, profiles)
-- **API Design**: RESTful API at `/api/v1`
+- **API Design**: RESTful API at `/v1`
 - **Key packages**:
   - `internal/api/` - HTTP handlers
   - `internal/auth/` - Authentication middleware
@@ -98,8 +98,8 @@ Single `.env` file in the project root contains all configuration:
 
 ```
 # Frontend Configuration
-VITE_API_BASE_URL=http://localhost:8080/api/v1  # Development
-# VITE_API_BASE_URL=https://api.shisha.toof.jp/api/v1  # Production
+VITE_API_BASE_URL=http://localhost:8080/v1  # Development
+# VITE_API_BASE_URL=https://api.shisha.toof.jp/v1  # Production
 
 # Backend Server Configuration  
 PORT=8080

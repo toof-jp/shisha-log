@@ -4,10 +4,10 @@ This comprehensive guide covers deploying the Shisha Log application to AWS usin
 
 ## Architecture Overview
 
-Shisha Log uses a separated domain architecture:
+Shisha Log uses a unified domain architecture:
 - **Frontend**: Served from CloudFront + S3 at `https://shisha.toof.jp`
-- **Backend API**: Served directly from Lightsail at `https://api.shisha.toof.jp`
-- **DNS**: Route 53 manages both frontend and API domains
+- **Backend API**: Served through CloudFront at `https://shisha.toof.jp/v1/*`
+- **DNS**: Route 53 manages the unified domain with CloudFront handling path-based routing
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ make setup-env
 Required environment variables:
 ```bash
 # Frontend Configuration
-VITE_API_BASE_URL=https://api.shisha.toof.jp/api/v1
+VITE_API_BASE_URL=https://shisha.toof.jp/v1
 
 # Backend Server Configuration  
 PORT=8080
@@ -92,7 +92,7 @@ container_image = "public.ecr.aws/YOUR_ECR_ALIAS/shisha-log:latest"
 
 # Domain configuration
 domain_name = "shisha.toof.jp"
-# Backend will automatically be api.shisha.toof.jp
+# Backend will be accessible at shisha.toof.jp/api/*
 acm_certificate_arn = "arn:aws:acm:us-east-1:xxx:certificate/xxx"
 
 # Instance configuration
@@ -205,8 +205,8 @@ This command:
 After deployment, verify:
 
 1. **Frontend**: https://shisha.example.com
-2. **API Health**: https://shisha.example.com/api/v1/health
-3. **API Documentation**: https://shisha.example.com/api/v1/docs
+2. **API Health**: https://shisha.example.com/v1/health
+3. **Swagger UI**: https://shisha.example.com/swagger/index.html
 
 ## Updating Deployments
 
@@ -298,11 +298,11 @@ aws s3 ls s3://[BUCKET_NAME]/
 # Check CloudFront distribution
 aws cloudfront get-distribution --id [DIST_ID]
 
-# Test API directly
-curl -I https://api.shisha.example.com/health
+# Test API health endpoint
+curl -I https://shisha.example.com/v1/health
 
-# Test API through CloudFront
-curl -I https://shisha.example.com/api/v1/health
+# Test root health endpoint  
+curl -I https://shisha.example.com/health
 ```
 
 ## Cost Estimates

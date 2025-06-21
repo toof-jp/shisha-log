@@ -32,7 +32,7 @@ npm install -g supabase
 supabase link --project-ref <your-project-ref>
 
 # マイグレーション実行
-supabase db push backend/migrations/20250106_password_auth.sql
+supabase db push backend/migrations/20250615_unified_schema.sql
 ```
 
 ### 3. 環境変数の設定
@@ -138,12 +138,12 @@ React Developer Toolsを使用：
 curl http://localhost:8080/health
 
 # ログイン
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8080/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"user_id":"test","password":"Test1234"}'
 
-# 認証付きリクエスト
-curl http://localhost:8080/api/v1/profile \
+# 認証付きリクエスト（現在のユーザー情報取得）
+curl http://localhost:8080/v1/users/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 

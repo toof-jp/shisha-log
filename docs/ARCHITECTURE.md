@@ -107,7 +107,7 @@ backend/
 
 1. **Registration**:
    ```
-   Client → POST /api/v1/auth/register
+   Client → POST /v1/auth/register
    → Validate password strength
    → Hash password (bcrypt)
    → Create user record
@@ -117,7 +117,7 @@ backend/
 
 2. **Login**:
    ```
-   Client → POST /api/v1/auth/login
+   Client → POST /v1/auth/login
    → Verify credentials
    → Generate JWT token
    → Return user data + token
@@ -256,7 +256,7 @@ Environment variables are managed through:
 ## Monitoring & Operations
 
 ### Health Checks
-- `/api/v1/health` - Backend health
+- `/v1/health` - Backend health
 - CloudFront origin health checks
 - Lightsail instance monitoring
 

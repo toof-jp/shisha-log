@@ -1,8 +1,34 @@
-# Route 53 DNS設定ガイド
+# DNS設定ガイド
 
 ## 概要
 
-Shisha LogはAWS Route 53を使用してDNS管理を行います。Route 53を使用することで、TerraformでDNSレコードを自動管理し、ヘルスチェックやフェイルオーバーなどの高度な機能を利用できます。
+Shisha Logのドメイン設定について説明します。AWS Route 53を推奨しますが、他のDNSプロバイダも使用可能です。
+
+## 必要なDNSレコード
+
+以下のDNSレコードが必要です：
+
+### フロントエンド（メインドメイン）
+- **Type**: CNAME/ALIAS
+- **Name**: @ または shisha
+- **Value**: CloudFrontディストリビューションドメイン（例: d1234567890.cloudfront.net）
+- **TTL**: 300秒
+
+### バックエンドAPI
+- **Type**: A
+- **Name**: api
+- **Value**: Lightsail静的IPアドレス
+- **TTL**: 300秒
+
+### オプション: WWWリダイレクト
+- **Type**: CNAME
+- **Name**: www
+- **Value**: CloudFrontディストリビューションドメイン
+- **TTL**: 300秒
+
+## Route 53を使用する場合（推奨）
+
+Route 53を使用することで、TerraformでDNSレコードを自動管理し、ヘルスチェックやフェイルオーバーなどの高度な機能を利用できます。
 
 ## アーキテクチャ
 
@@ -259,6 +285,32 @@ aws lightsail get-instance --instance-name shisha-log-prod
 ### Cloudflare Registrar
 1. DNS設定をCloudflareからRoute 53に変更
 2. ネームサーバーをRoute 53のものに更新
+
+## 他のDNSプロバイダを使用する場合
+
+### Cloudflare
+1. Cloudflareダッシュボードにログイン
+2. ドメインを選択
+3. DNS設定に移動
+4. 上記の必要なレコードを追加
+5. CloudFrontのCNAMEにはプロキシステータスを「DNSのみ」（グレーのクラウド）に設定
+
+### その他のプロバイダ
+基本的には上記の「必要なDNSレコード」セクションに記載されたレコードを設定してください。
+
+## DNS検証
+
+DNS伝播後（通常5-30分）、以下で確認：
+
+```bash
+# フロントエンドの確認
+dig shisha.example.com
+curl -I https://shisha.example.com
+
+# APIの確認
+dig api.shisha.example.com
+curl https://api.shisha.example.com/v1/health
+```
 
 ## 関連ドキュメント
 

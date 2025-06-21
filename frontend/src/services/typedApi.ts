@@ -13,7 +13,7 @@ type QueryParams<P extends keyof paths, M extends keyof paths[P]> =
 type PathParams<P extends keyof paths, M extends keyof paths[P]> = 
   PathMethod<P, M> extends { parameters: { path?: infer P } } ? P : never;
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
 
 export class TypedApiClient {
   private api: AxiosInstance;

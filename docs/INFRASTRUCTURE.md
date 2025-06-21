@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shisha Log uses a separated domain architecture with dedicated domains for frontend and backend services:
+Shisha Log uses a unified domain architecture with path-based routing:
 
 - **Frontend**: Static SPA hosted on AWS S3 + CloudFront
 - **Backend**: Dockerized API running on AWS Lightsail
@@ -12,8 +12,10 @@ Shisha Log uses a separated domain architecture with dedicated domains for front
 
 ```
 shisha.toof.jp          → CloudFront → S3 (Frontend)
-api.shisha.toof.jp      → Lightsail (Backend API)
+shisha.toof.jp/api/*    → CloudFront → Lightsail (Backend API)
 ```
+
+This unified approach is achieved through CloudFront distribution with multiple origins and path-based behaviors.
 
 ## AWS Services
 
@@ -89,7 +91,7 @@ make deploy-backend
 
 Frontend connects to backend using:
 ```
-VITE_API_BASE_URL=https://api.shisha.toof.jp/api/v1
+VITE_API_BASE_URL=https://api.shisha.toof.jp/v1
 ```
 
 Backend allows CORS from:

@@ -77,6 +77,6 @@ make deploy-all
 
 ## 次のステップ
 
-- [デプロイメントガイド](DEPLOYMENT_GUIDE.md) - 本番環境へのデプロイ
-- [API仕様書](../API.md) - APIの詳細
-- [アーキテクチャ](UNIFIED_DOMAIN_ARCHITECTURE.md) - システム構成の理解
+- [デプロイメントガイド](DEPLOYMENT.md) - 本番環境へのデプロイ
+- [API仕様書](http://localhost:8080/swagger/index.html) - Swagger UIでAPIを確認
+- [アーキテクチャ](ARCHITECTURE.md) - システム構成の理解

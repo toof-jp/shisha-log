@@ -59,36 +59,36 @@ Shisha Log is a web application designed for hookah (shisha) enthusiasts to trac
 ### 3.2 API Endpoints
 
 #### Authentication
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/refresh` - Refresh JWT token
-- `POST /api/v1/auth/logout` - User logout
+- `POST /v1/auth/register` - User registration
+- `POST /v1/auth/login` - User login
+- `POST /v1/auth/refresh` - Refresh JWT token
+- `POST /v1/auth/logout` - User logout
 
 #### Demo Mode
 - `GET /demo` - Access demo mode with sample data (no authentication required)
 
 #### User Management
-- `GET /api/v1/users/me` - Get current user
-- `PUT /api/v1/users/me` - Update current user
-- `DELETE /api/v1/users/me` - Delete account
+- `GET /v1/users/me` - Get current user
+- `PUT /v1/users/me` - Update current user
+- `DELETE /v1/users/me` - Delete account
 
 #### Sessions
-- `GET /api/v1/sessions` - List user sessions
-- `POST /api/v1/sessions` - Create new session
-- `GET /api/v1/sessions/:id` - Get session details
-- `PUT /api/v1/sessions/:id` - Update session
-- `DELETE /api/v1/sessions/:id` - Delete session
-- `GET /api/v1/sessions/calendar` - Get sessions for calendar view (month/year)
-- `GET /api/v1/sessions/by-date` - Get sessions for a specific date
+- `GET /v1/sessions` - List user sessions
+- `POST /v1/sessions` - Create new session
+- `GET /v1/sessions/:id` - Get session details
+- `PUT /v1/sessions/:id` - Update session
+- `DELETE /v1/sessions/:id` - Delete session
+- `GET /v1/sessions/calendar` - Get sessions for calendar view (month/year)
+- `GET /v1/sessions/by-date` - Get sessions for a specific date
 
 #### Flavors
-- `GET /api/v1/flavors/stats` - Get flavor usage statistics
+- `GET /v1/flavors/stats` - Get flavor usage statistics
 
 #### Stores
-- `GET /api/v1/stores/stats` - Get store visit statistics
+- `GET /v1/stores/stats` - Get store visit statistics
 
 #### Creators
-- `GET /api/v1/creators/stats` - Get creator/mixer statistics
+- `GET /v1/creators/stats` - Get creator/mixer statistics
 
 ### 3.3 Data Models
 

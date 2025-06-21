@@ -30,6 +30,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "backup" {
     id     = "delete-old-backups"
     status = "Enabled"
 
+    # Apply to all objects in the bucket
+    filter {}
+
     # Delete backups older than retention days
     expiration {
       days = var.backup_retention_days

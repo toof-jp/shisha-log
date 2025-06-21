@@ -13,9 +13,8 @@ container_registry = "public.ecr.aws"
 container_image    = "public.ecr.aws/d8c4j6x0/shisha-log:latest"
 
 # Application configuration
-allowed_origins = "https://shisha.toof.jp,https://www.shisha.toof.jp"
 token_duration  = "24h"
-api_base_url    = "https://api.shisha.toof.jp/api/v1"
+api_base_url    = "https://api.shisha.toof.jp/v1"
 
 # ACM Certificate configuration
 # Option 1: Use existing certificate (set create_acm_certificate = false)

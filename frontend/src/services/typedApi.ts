@@ -10,8 +10,6 @@ type ResponseBody<P extends keyof paths, M extends keyof paths[P], S extends num
   PathMethod<P, M> extends { responses: { [K in S]: { content: { 'application/json': infer R } } } } ? R : never;
 type QueryParams<P extends keyof paths, M extends keyof paths[P]> = 
   PathMethod<P, M> extends { parameters: { query?: infer Q } } ? Q : never;
-type PathParams<P extends keyof paths, M extends keyof paths[P]> = 
-  PathMethod<P, M> extends { parameters: { path?: infer P } } ? P : never;
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
 

@@ -21,6 +21,22 @@ export const Sessions: React.FC = () => {
     fetchSessions(0);
   }, []);
 
+  const fetchMoreSessions = useCallback(async () => {
+    try {
+      setLoadingMore(true);
+      const response = await apiClient.getSessions(limit, offset);
+      const newSessions = response.sessions || [];
+      setSessions(prev => [...prev, ...newSessions]);
+      setHasMore(newSessions.length === limit);
+      setOffset(prev => prev + limit);
+    } catch (err) {
+      console.error('Error fetching more sessions:', err);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [offset]);
+
   useEffect(() => {
     // Set up intersection observer
     if (loadingMore || !hasMore) return;
@@ -67,22 +83,6 @@ export const Sessions: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const fetchMoreSessions = useCallback(async () => {
-    try {
-      setLoadingMore(true);
-      const response = await apiClient.getSessions(limit, offset);
-      const newSessions = response.sessions || [];
-      setSessions(prev => [...prev, ...newSessions]);
-      setHasMore(newSessions.length === limit);
-      setOffset(prev => prev + limit);
-    } catch (err) {
-      console.error('Error fetching more sessions:', err);
-      setHasMore(false);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [offset]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('このセッションを削除してもよろしいですか？')) return;

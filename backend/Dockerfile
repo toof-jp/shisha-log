@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24.4-alpine AS builder
 
 # Install dependencies
 RUN apk add --no-cache git
@@ -13,8 +13,14 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
+# Install swag for generating swagger docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
 # Copy source code
 COPY . .
+
+# Generate swagger documentation
+RUN swag init -g cmd/server/main.go
 
 # Get build args
 ARG GIT_COMMIT=unknown

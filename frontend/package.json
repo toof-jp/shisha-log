@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate-types": "swagger2openapi ../backend/docs/swagger.json -o ../backend/docs/openapi.json && openapi-typescript ../backend/docs/openapi.json -o ./app/types/generated.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -33,7 +34,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "openapi-typescript": "^7.8.0",
     "postcss": "^8.5.5",
+    "swagger2openapi": "^7.0.8",
     "tailwindcss": "^4.1.10",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",

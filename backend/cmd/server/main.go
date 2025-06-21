@@ -8,13 +8,34 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	"github.com/supabase-community/supabase-go"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/toof-jp/shisha-log/backend/internal/api"
 	"github.com/toof-jp/shisha-log/backend/internal/auth"
 	"github.com/toof-jp/shisha-log/backend/internal/config"
 	"github.com/toof-jp/shisha-log/backend/internal/repository"
 	"github.com/toof-jp/shisha-log/backend/internal/service"
 	"github.com/toof-jp/shisha-log/backend/internal/version"
+	_ "github.com/toof-jp/shisha-log/backend/docs"
 )
+
+// @title Shisha Log API
+// @version 1.0
+// @description API for tracking and managing shisha (hookah) sessions
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url https://github.com/toof-jp/shisha-log
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	// Load configuration
@@ -91,6 +112,9 @@ func main() {
 		}
 		return c.JSON(200, response)
 	})
+
+	// Swagger documentation
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Auth routes (public)
 	authGroup := apiGroup.Group("/auth")

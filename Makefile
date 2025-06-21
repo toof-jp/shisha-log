@@ -1,5 +1,5 @@
 .PHONY: all help clean install
-.PHONY: backend-build backend-run backend-dev backend-test backend-clean backend-deps backend-fmt backend-lint
+.PHONY: backend-build backend-run backend-dev backend-test backend-clean backend-deps backend-fmt backend-lint backend-swagger
 .PHONY: frontend-build frontend-dev frontend-test frontend-clean frontend-install frontend-lint frontend-typecheck
 .PHONY: docker-build docker-run docker-push ecr-login update-ecr-password
 .PHONY: deploy-frontend deploy-backend deploy-all
@@ -21,6 +21,7 @@ help:
 	@echo "  make backend-test       - Run backend tests"
 	@echo "  make backend-fmt        - Format backend code"
 	@echo "  make backend-lint       - Run backend linter"
+	@echo "  make backend-swagger    - Generate Swagger/OpenAPI documentation"
 	@echo ""
 	@echo "Frontend Commands:"
 	@echo "  make frontend-install   - Install frontend dependencies"
@@ -98,7 +99,17 @@ backend-run:
 	cd backend && go run cmd/server/main.go
 
 backend-dev:
-	cd backend && air
+	@if command -v air >/dev/null 2>&1; then \
+		cd backend && air; \
+	elif [ -f /home/toof/go/bin/air ]; then \
+		cd backend && /home/toof/go/bin/air; \
+	elif [ -f $(HOME)/go/bin/air ]; then \
+		cd backend && $(HOME)/go/bin/air; \
+	else \
+		echo "air not found. Installing..."; \
+		go install github.com/air-verse/air@latest; \
+		cd backend && $(HOME)/go/bin/air; \
+	fi
 
 backend-test:
 	cd backend && go test -v ./...
@@ -114,6 +125,19 @@ backend-fmt:
 
 backend-lint:
 	cd backend && golangci-lint run
+
+backend-swagger:
+	@if command -v swag >/dev/null 2>&1; then \
+		cd backend && swag init -g cmd/server/main.go; \
+	elif [ -f /home/toof/go/bin/swag ]; then \
+		cd backend && /home/toof/go/bin/swag init -g cmd/server/main.go; \
+	elif [ -f $(HOME)/go/bin/swag ]; then \
+		cd backend && $(HOME)/go/bin/swag init -g cmd/server/main.go; \
+	else \
+		echo "swag not found. Installing..."; \
+		go install github.com/swaggo/swag/cmd/swag@latest; \
+		cd backend && $(HOME)/go/bin/swag init -g cmd/server/main.go; \
+	fi
 
 # Frontend commands
 frontend-install:

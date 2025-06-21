@@ -20,6 +20,18 @@ func NewSessionHandler(repo *repository.SessionRepository) *SessionHandler {
 	return &SessionHandler{repo: repo}
 }
 
+// CreateSession godoc
+// @Summary Create a new session
+// @Description Create a new shisha session for the authenticated user
+// @Tags sessions
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param session body models.CreateSessionRequest true "Session data"
+// @Success 201 {object} models.SessionWithFlavors "Created session with flavors"
+// @Failure 400 {object} object{error=string} "Invalid request body"
+// @Failure 500 {object} object{error=string} "Failed to create session"
+// @Router /sessions [post]
 func (h *SessionHandler) CreateSession(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
@@ -54,6 +66,18 @@ func (h *SessionHandler) CreateSession(c echo.Context) error {
 	return c.JSON(http.StatusCreated, createdSession)
 }
 
+// GetSession godoc
+// @Summary Get a session by ID
+// @Description Get a specific session by its ID
+// @Tags sessions
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Session ID"
+// @Success 200 {object} models.SessionWithFlavors "Session details with flavors"
+// @Failure 403 {object} object{error=string} "Access denied"
+// @Failure 404 {object} object{error=string} "Session not found"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /sessions/{id} [get]
 func (h *SessionHandler) GetSession(c echo.Context) error {
 	sessionID := c.Param("id")
 	userID := c.Get("user_id").(string)
@@ -79,6 +103,17 @@ func (h *SessionHandler) GetSession(c echo.Context) error {
 	return c.JSON(http.StatusOK, session)
 }
 
+// GetUserSessions godoc
+// @Summary Get user's sessions
+// @Description Get paginated list of sessions for the authenticated user
+// @Tags sessions
+// @Produce json
+// @Security Bearer
+// @Param limit query int false "Number of items per page" default(20)
+// @Param offset query int false "Number of items to skip" default(0)
+// @Success 200 {object} object{sessions=[]models.SessionWithFlavors,total=int,limit=int,offset=int} "Paginated sessions list"
+// @Failure 500 {object} object{error=string} "Failed to get sessions"
+// @Router /sessions [get]
 func (h *SessionHandler) GetUserSessions(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
@@ -112,6 +147,21 @@ func (h *SessionHandler) GetUserSessions(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// UpdateSession godoc
+// @Summary Update a session
+// @Description Update an existing session
+// @Tags sessions
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Session ID"
+// @Param session body models.UpdateSessionRequest true "Updated session data"
+// @Success 200 {object} models.SessionWithFlavors "Updated session"
+// @Failure 400 {object} object{error=string} "Invalid request body"
+// @Failure 403 {object} object{error=string} "Access denied"
+// @Failure 404 {object} object{error=string} "Session not found"
+// @Failure 500 {object} object{error=string} "Failed to update session"
+// @Router /sessions/{id} [put]
 func (h *SessionHandler) UpdateSession(c echo.Context) error {
 	sessionID := c.Param("id")
 	userID := c.Get("user_id").(string)
@@ -151,6 +201,18 @@ func (h *SessionHandler) UpdateSession(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedSession)
 }
 
+// DeleteSession godoc
+// @Summary Delete a session
+// @Description Delete a session by ID
+// @Tags sessions
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Session ID"
+// @Success 200 {object} object{message=string} "Session deleted successfully"
+// @Failure 403 {object} object{error=string} "Access denied"
+// @Failure 404 {object} object{error=string} "Session not found"
+// @Failure 500 {object} object{error=string} "Failed to delete session"
+// @Router /sessions/{id} [delete]
 func (h *SessionHandler) DeleteSession(c echo.Context) error {
 	sessionID := c.Param("id")
 	userID := c.Get("user_id").(string)
@@ -175,6 +237,15 @@ func (h *SessionHandler) DeleteSession(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Session deleted successfully"})
 }
 
+// GetFlavorStats godoc
+// @Summary Get flavor statistics
+// @Description Get flavor usage statistics for the authenticated user
+// @Tags statistics
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.FlavorStats "Flavor statistics"
+// @Failure 500 {object} object{error=string} "Failed to get flavor statistics"
+// @Router /flavors/stats [get]
 func (h *SessionHandler) GetFlavorStats(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
@@ -187,6 +258,19 @@ func (h *SessionHandler) GetFlavorStats(c echo.Context) error {
 	return c.JSON(http.StatusOK, stats)
 }
 
+// GetCalendarData godoc
+// @Summary Get calendar data
+// @Description Get session counts for each day in a specific month
+// @Tags sessions
+// @Produce json
+// @Security Bearer
+// @Param year query int true "Year"
+// @Param month query int true "Month (1-12)"
+// @Param timezone query string false "Timezone (default UTC)"
+// @Success 200 {object} map[string]int "Map of date strings to session counts"
+// @Failure 400 {object} object{error=string} "Invalid parameters"
+// @Failure 500 {object} object{error=string} "Failed to get calendar data"
+// @Router /sessions/calendar [get]
 func (h *SessionHandler) GetCalendarData(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
@@ -219,6 +303,18 @@ func (h *SessionHandler) GetCalendarData(c echo.Context) error {
 	return c.JSON(http.StatusOK, calendarData)
 }
 
+// GetSessionsByDate godoc
+// @Summary Get sessions by date
+// @Description Get all sessions for a specific date
+// @Tags sessions
+// @Produce json
+// @Security Bearer
+// @Param date query string true "Date in YYYY-MM-DD format"
+// @Param timezone query string false "Timezone (default UTC)"
+// @Success 200 {object} object{sessions=[]models.SessionWithFlavors,date=string} "Sessions for the specified date"
+// @Failure 400 {object} object{error=string} "Invalid date format"
+// @Failure 500 {object} object{error=string} "Failed to get sessions"
+// @Router /sessions/by-date [get]
 func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 	dateStr := c.QueryParam("date")
@@ -270,6 +366,15 @@ func (h *SessionHandler) GetSessionsByDate(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// GetStoreStats godoc
+// @Summary Get store statistics
+// @Description Get store visit statistics for the authenticated user
+// @Tags statistics
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.StoreStats "Store statistics"
+// @Failure 500 {object} object{error=string} "Failed to get store statistics"
+// @Router /stores/stats [get]
 func (h *SessionHandler) GetStoreStats(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
@@ -282,6 +387,15 @@ func (h *SessionHandler) GetStoreStats(c echo.Context) error {
 	return c.JSON(http.StatusOK, stats)
 }
 
+// GetCreatorStats godoc
+// @Summary Get creator statistics
+// @Description Get creator statistics for the authenticated user
+// @Tags statistics
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.CreatorStats "Creator statistics"
+// @Failure 500 {object} object{error=string} "Failed to get creator statistics"
+// @Router /creators/stats [get]
 func (h *SessionHandler) GetCreatorStats(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 

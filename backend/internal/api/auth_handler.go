@@ -9,6 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/toof-jp/shisha-log/backend/internal/repository"
 	"github.com/toof-jp/shisha-log/backend/internal/service"
+	
+	_ "github.com/toof-jp/shisha-log/backend/internal/models"
 )
 
 type AuthHandler struct {
@@ -29,7 +31,17 @@ func NewAuthHandler(
 	}
 }
 
-// Register handles user registration
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account with user ID and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body object{user_id=string,password=string} true "Registration request" example({"user_id": "johndoe", "password": "securePassword123"})
+// @Success 201 {object} object{user=models.User,token=string,message=string} "Registration successful"
+// @Failure 400 {object} object{error=string} "Invalid request or validation error"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c echo.Context) error {
 	var req struct {
 		UserID   string `json:"user_id" validate:"required,min=3,max=30"`
@@ -78,7 +90,18 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	})
 }
 
-// Login handles user login
+// Login godoc
+// @Summary User login
+// @Description Authenticate a user and receive a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body object{user_id=string,password=string} true "Login request" example({"user_id": "johndoe", "password": "securePassword123"})
+// @Success 200 {object} object{user=models.User,token=string} "Login successful"
+// @Failure 400 {object} object{error=string} "Invalid request body"
+// @Failure 401 {object} object{error=string} "Invalid credentials"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c echo.Context) error {
 	var req struct {
 		UserID   string `json:"user_id" validate:"required"`
@@ -115,7 +138,17 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	})
 }
 
-// RequestPasswordReset handles password reset requests
+// RequestPasswordReset godoc
+// @Summary Request password reset
+// @Description Request a password reset token for a user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body object{user_id=string} true "Password reset request" example({"user_id": "johndoe"})
+// @Success 200 {object} object{message=string,reset_token=string} "Reset token generated (token would be sent via secure channel in production)"
+// @Failure 400 {object} object{error=string} "Invalid request body"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/request-password-reset [post]
 func (h *AuthHandler) RequestPasswordReset(c echo.Context) error {
 	var req struct {
 		UserID string `json:"user_id" validate:"required"`
@@ -150,7 +183,17 @@ func (h *AuthHandler) RequestPasswordReset(c echo.Context) error {
 	})
 }
 
-// ResetPassword handles password reset
+// ResetPassword godoc
+// @Summary Reset password
+// @Description Reset user password using a reset token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body object{token=string,new_password=string} true "Password reset data" example({"token": "reset-token-here", "new_password": "newSecurePassword123"})
+// @Success 200 {object} object{message=string} "Password reset successfully"
+// @Failure 400 {object} object{error=string} "Invalid request or token"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c echo.Context) error {
 	var req struct {
 		Token       string `json:"token" validate:"required"`
@@ -194,7 +237,19 @@ func (h *AuthHandler) ResetPassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Password reset successfully"})
 }
 
-// ChangePassword handles password change for authenticated users
+// ChangePassword godoc
+// @Summary Change password
+// @Description Change password for the authenticated user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param request body object{current_password=string,new_password=string} true "Password change data" example({"current_password": "currentPassword123", "new_password": "newSecurePassword123"})
+// @Success 200 {object} object{message=string} "Password changed successfully"
+// @Failure 400 {object} object{error=string} "Invalid request or validation error"
+// @Failure 401 {object} object{error=string} "Unauthorized or incorrect current password"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 	userUUID, err := uuid.Parse(userID)
@@ -241,7 +296,17 @@ func (h *AuthHandler) ChangePassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Password changed successfully"})
 }
 
-// GetCurrentUser returns the current authenticated user's information
+// GetCurrentUser godoc
+// @Summary Get current user
+// @Description Get the current authenticated user's information
+// @Tags users
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.User "User information"
+// @Failure 400 {object} object{error=string} "Invalid user ID"
+// @Failure 404 {object} object{error=string} "User not found"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /users/me [get]
 func (h *AuthHandler) GetCurrentUser(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 	userUUID, err := uuid.Parse(userID)

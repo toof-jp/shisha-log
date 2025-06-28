@@ -209,9 +209,6 @@ export const Sessions: React.FC = () => {
                     <span className="text-gray-600 text-sm">読み込み中...</span>
                   </div>
                 )}
-                {!hasMore && (
-                  <p className="text-gray-500 text-sm">すべてのセッションを表示しました</p>
-                )}
               </div>
             )}
           </div>
@@ -298,9 +295,9 @@ export const Sessions: React.FC = () => {
             </table>
           </div>
 
-          {/* Infinite scroll loading indicator */}
+          {/* Infinite scroll loading indicator - Desktop only */}
           {sessions.length > 0 && (
-            <div ref={loadMoreRef} className="mt-8 text-center py-4">
+            <div ref={loadMoreRef} className="hidden sm:block mt-8 text-center py-4">
               {loadingMore && (
                 <div className="inline-flex items-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -309,9 +306,6 @@ export const Sessions: React.FC = () => {
                   </svg>
                   <span className="text-gray-600">読み込み中...</span>
                 </div>
-              )}
-              {!hasMore && sessions.length > 0 && (
-                <p className="text-gray-500 text-sm">すべてのセッションを表示しました</p>
               )}
             </div>
           )}

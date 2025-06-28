@@ -61,7 +61,10 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
     maintainAspectRatio: false,
     layout: {
       padding: {
+        top: 10,
         bottom: 10,
+        left: 10,
+        right: 10,
       },
     },
     plugins: {
@@ -71,12 +74,12 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
         fullSize: true,
         align: 'center' as const,
         labels: {
-          padding: 10,
+          padding: 8,
           font: {
-            size: 12,
+            size: 11,
           },
-          boxWidth: 12,
-          boxHeight: 12,
+          boxWidth: 10,
+          boxHeight: 10,
           usePointStyle: true,
         },
       },
@@ -100,7 +103,7 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
       {data.length === 0 ? (
         <p className="text-gray-500 text-sm">データがありません</p>
       ) : (
-        <div className="w-full" style={{ minHeight: `${Math.max(400, data.length * 30 + 300)}px` }}>
+        <div className="w-full h-64 sm:h-80 md:h-96">
           <Pie data={chartData} options={options} />
         </div>
       )}

@@ -20,8 +20,8 @@ type SessionInsert struct {
 type FlavorInsert struct {
 	ID          string  `json:"id"`
 	SessionID   string  `json:"session_id"`
-	FlavorName  *string `json:"flavor_name,omitempty"`
-	Brand       *string `json:"brand,omitempty"`
+	FlavorName  *string `json:"flavor_name"`
+	Brand       *string `json:"brand"`
 	FlavorOrder int     `json:"flavor_order"`
 	// Explicitly exclude created_at
 }

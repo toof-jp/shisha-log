@@ -83,6 +83,29 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
 
+	// Generate refresh token
+	refreshToken, err := h.jwtService.GenerateRefreshToken()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate refresh token"})
+	}
+
+	// Save refresh token to database (expires in 30 days)
+	refreshExpiresAt := time.Now().Add(30 * 24 * time.Hour)
+	if err := h.userRepo.CreateRefreshToken(user.ID, refreshToken, refreshExpiresAt); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save refresh token"})
+	}
+
+	// Set refresh token as httpOnly cookie
+	cookie := new(http.Cookie)
+	cookie.Name = "refresh_token"
+	cookie.Value = refreshToken
+	cookie.Expires = refreshExpiresAt
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.SameSite = http.SameSiteStrictMode
+	c.SetCookie(cookie)
+
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"user":    user,
 		"token":   token,
@@ -131,6 +154,29 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
+
+	// Generate refresh token
+	refreshToken, err := h.jwtService.GenerateRefreshToken()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate refresh token"})
+	}
+
+	// Save refresh token to database (expires in 30 days)
+	refreshExpiresAt := time.Now().Add(30 * 24 * time.Hour)
+	if err := h.userRepo.CreateRefreshToken(user.ID, refreshToken, refreshExpiresAt); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save refresh token"})
+	}
+
+	// Set refresh token as httpOnly cookie
+	cookie := new(http.Cookie)
+	cookie.Name = "refresh_token"
+	cookie.Value = refreshToken
+	cookie.Expires = refreshExpiresAt
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.SameSite = http.SameSiteStrictMode
+	c.SetCookie(cookie)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"user":  user,
@@ -324,4 +370,90 @@ func (h *AuthHandler) GetCurrentUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Get a new access token using refresh token from cookie
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{token=string,user=models.User} "New access token generated"
+// @Failure 400 {object} object{error=string} "No refresh token provided"
+// @Failure 401 {object} object{error=string} "Invalid or expired refresh token"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/refresh [post]
+func (h *AuthHandler) Refresh(c echo.Context) error {
+	// Get refresh token from cookie
+	cookie, err := c.Cookie("refresh_token")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "No refresh token provided"})
+	}
+
+	// Validate refresh token
+	refreshToken, err := h.userRepo.GetRefreshToken(cookie.Value)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid or expired refresh token"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to validate refresh token"})
+	}
+
+	// Get user
+	user, err := h.userRepo.GetByID(refreshToken.UserID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve user"})
+	}
+
+	// Generate new access token
+	newToken, err := h.jwtService.GenerateToken(user.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
+	}
+
+	// Update refresh token used_at
+	if err := h.userRepo.UpdateRefreshTokenUsedAt(cookie.Value); err != nil {
+		// Log error but don't fail the request
+		c.Logger().Errorf("Failed to update refresh token used_at: %v", err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"token": newToken,
+		"user":  user,
+	})
+}
+
+// Logout godoc
+// @Summary Logout user
+// @Description Logout user and revoke refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} object{message=string} "Logged out successfully"
+// @Failure 500 {object} object{error=string} "Internal server error"
+// @Router /auth/logout [post]
+func (h *AuthHandler) Logout(c echo.Context) error {
+	// Get refresh token from cookie
+	cookie, err := c.Cookie("refresh_token")
+	if err == nil {
+		// Revoke refresh token in database
+		if err := h.userRepo.RevokeRefreshToken(cookie.Value); err != nil {
+			// Log error but don't fail the request
+			c.Logger().Errorf("Failed to revoke refresh token: %v", err)
+		}
+	}
+
+	// Clear refresh token cookie
+	cookie = new(http.Cookie)
+	cookie.Name = "refresh_token"
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-24 * time.Hour)
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.SameSite = http.SameSiteStrictMode
+	c.SetCookie(cookie)
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out successfully"})
 }

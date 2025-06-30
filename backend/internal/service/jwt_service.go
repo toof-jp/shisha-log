@@ -1,6 +1,8 @@
 package service
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -71,4 +73,13 @@ func (s *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return nil, jwt.ErrSignatureInvalid
+}
+
+// GenerateRefreshToken generates a secure random refresh token
+func (s *JWTService) GenerateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }

@@ -21,6 +21,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 class ApiClient {
   private api: AxiosInstance;
   private token: string | null = null;
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value?: any) => void;
+    reject: (reason?: any) => void;
+  }> = [];
 
   constructor() {
     this.api = axios.create({
@@ -28,6 +33,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      withCredentials: true, // Send cookies with requests
     });
 
     // Load token from localStorage on initialization
@@ -49,18 +55,69 @@ class ApiClient {
       }
     );
 
-    // Response interceptor to handle errors
+    // Response interceptor to handle errors and token refresh
     this.api.interceptors.response.use(
       (response) => response,
-      (error: AxiosError<ErrorResponse>) => {
-        if (error.response?.status === 401) {
-          // Clear token and redirect to login
-          this.clearToken();
-          window.location.href = '/login';
+      async (error: AxiosError<ErrorResponse>) => {
+        const originalRequest = error.config as any;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // If already refreshing, queue this request
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            }).then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return this.api(originalRequest);
+            }).catch((err) => {
+              return Promise.reject(err);
+            });
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            // Try to refresh the token
+            const response = await this.api.post<AuthResponse>('/auth/refresh');
+            const { token, user } = response.data;
+
+            // Update token and user
+            this.setToken(token);
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Process queued requests
+            this.processQueue(null, token);
+
+            // Retry original request with new token
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return this.api(originalRequest);
+          } catch (refreshError) {
+            // Refresh failed, redirect to login
+            this.processQueue(refreshError, null);
+            this.clearToken();
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          } finally {
+            this.isRefreshing = false;
+          }
         }
+
         return Promise.reject(error);
       }
     );
+  }
+
+  private processQueue(error: any, token: string | null = null) {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else {
+        prom.resolve(token);
+      }
+    });
+    
+    this.failedQueue = [];
   }
 
   setToken(token: string) {
@@ -94,7 +151,14 @@ class ApiClient {
   }
 
   async logout() {
-    this.clearToken();
+    try {
+      await this.api.post('/auth/logout');
+    } catch (error) {
+      // Even if logout fails, clear local state
+      console.error('Logout error:', error);
+    } finally {
+      this.clearToken();
+    }
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

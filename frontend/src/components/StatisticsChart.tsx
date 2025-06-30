@@ -59,6 +59,7 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
     layout: {
       padding: {
         top: 10,

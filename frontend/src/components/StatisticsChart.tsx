@@ -22,26 +22,26 @@ export const StatisticsChart: React.FC<StatisticsChartProps> = ({
   countLabel = "回" 
 }) => {
   const colors = [
-    '#4F46E5', // indigo-600
-    '#7C3AED', // violet-600
-    '#2563EB', // blue-600
-    '#0891B2', // cyan-600
-    '#059669', // emerald-600
-    '#84CC16', // lime-600
-    '#EAB308', // yellow-600
-    '#EA580C', // orange-600
-    '#DC2626', // red-600
-    '#DB2777', // pink-600
-    '#6366F1', // indigo-500
-    '#8B5CF6', // violet-500
-    '#3B82F6', // blue-500
-    '#06B6D4', // cyan-500
-    '#10B981', // emerald-500
-    '#A3E635', // lime-500
-    '#FACC15', // yellow-500
-    '#FB923C', // orange-500
-    '#EF4444', // red-500
-    '#EC4899', // pink-500
+    '#2563EB', // blue-600 - 濃い青
+    '#EA580C', // orange-600 - 濃いオレンジ
+    '#059669', // emerald-600 - 濃い緑
+    '#DB2777', // pink-600 - 濃いピンク
+    '#7C3AED', // violet-600 - 濃い紫
+    '#FACC15', // yellow-500 - 明るい黄色
+    '#0891B2', // cyan-600 - 濃いシアン
+    '#DC2626', // red-600 - 濃い赤
+    '#84CC16', // lime-600 - 濃いライム
+    '#6366F1', // indigo-500 - 中間の藍色
+    '#FB923C', // orange-500 - 中間のオレンジ
+    '#10B981', // emerald-500 - 中間の緑
+    '#EC4899', // pink-500 - 中間のピンク
+    '#8B5CF6', // violet-500 - 中間の紫
+    '#3B82F6', // blue-500 - 中間の青
+    '#EAB308', // yellow-600 - 濃い黄色
+    '#06B6D4', // cyan-500 - 中間のシアン
+    '#EF4444', // red-500 - 中間の赤
+    '#A3E635', // lime-500 - 明るいライム
+    '#4F46E5', // indigo-600 - 濃い藍色
   ];
 
   const chartData = {

@@ -12,7 +12,8 @@ import type {
   CalendarData,
   SessionsByDateResponse,
   StoreStats,
-  CreatorStats
+  CreatorStats,
+  OrderStats
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
@@ -173,6 +174,11 @@ class ApiClient {
 
   async getCreatorStats(): Promise<CreatorStats> {
     const response = await this.api.get<CreatorStats>('/creators/stats');
+    return response.data;
+  }
+
+  async getOrderStats(): Promise<OrderStats> {
+    const response = await this.api.get<OrderStats>('/orders/stats');
     return response.data;
   }
 }

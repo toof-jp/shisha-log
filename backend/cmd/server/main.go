@@ -151,6 +151,9 @@ func main() {
 	protected.GET("/stores/stats", sessionHandler.GetStoreStats)
 	protected.GET("/creators/stats", sessionHandler.GetCreatorStats)
 
+	// Order statistics route
+	protected.GET("/orders/stats", sessionHandler.GetOrderStats)
+
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)
 	if err := e.Start(":" + cfg.Port); err != nil {

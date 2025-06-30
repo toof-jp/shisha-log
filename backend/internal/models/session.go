@@ -74,3 +74,12 @@ type StoreStats struct {
 type CreatorStats struct {
 	Creators []CreatorCount `json:"creators"`
 }
+
+type OrderCount struct {
+	OrderDetails string `json:"order_details"`
+	Count        int    `json:"count"`
+}
+
+type OrderStats struct {
+	Orders []OrderCount `json:"orders"`
+}

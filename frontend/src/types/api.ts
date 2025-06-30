@@ -100,6 +100,16 @@ export interface StoreStats {
   stores: StoreCount[];
 }
 
+
 export interface CreatorStats {
   creators: CreatorCount[];
+}
+
+export interface OrderCount {
+  order_details: string;
+  count: number;
+}
+
+export interface OrderStats {
+  orders: OrderCount[];
 }

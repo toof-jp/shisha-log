@@ -671,3 +671,39 @@ func (r *SessionRepository) GetCreatorStats(ctx context.Context, userID string) 
 		Creators: creators,
 	}, nil
 }
+
+func (r *SessionRepository) GetOrderStats(ctx context.Context, userID string) (*models.OrderStats, error) {
+	// Get all sessions for the user
+	sessions, err := r.GetByUserID(ctx, userID, 10000, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Count sessions by order (excluding empty order details)
+	orderMap := make(map[string]int)
+	for _, session := range sessions {
+		if session.OrderDetails != nil && *session.OrderDetails != "" {
+			orderMap[*session.OrderDetails]++
+		}
+	}
+
+	// Convert to sorted slice
+	orders := make([]models.OrderCount, 0, len(orderMap))
+	for name, count := range orderMap {
+		orders = append(orders, models.OrderCount{
+			OrderDetails: name,
+			Count:        count,
+		})
+	}
+
+	// Sort by count descending
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].Count > orders[j].Count
+	})
+
+	// No limit - return all orders
+
+	return &models.OrderStats{
+		Orders: orders,
+	}, nil
+}

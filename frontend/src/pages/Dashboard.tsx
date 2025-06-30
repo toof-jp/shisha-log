@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../services/api';
-import type { FlavorStats, StoreStats, CreatorStats } from '../types/api';
+import type { FlavorStats, StoreStats, CreatorStats, OrderStats } from '../types/api';
 import { SessionCalendar } from '../components/SessionCalendar';
 import { DailySessionsModal } from '../components/DailySessionsModal';
 import { StatisticsChart } from '../components/StatisticsChart';
@@ -11,8 +11,9 @@ export const Dashboard: React.FC = () => {
   const [flavorStats, setFlavorStats] = useState<FlavorStats | null>(null);
   const [storeStats, setStoreStats] = useState<StoreStats | null>(null);
   const [creatorStats, setCreatorStats] = useState<CreatorStats | null>(null);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'all-flavors' | 'main-flavors' | 'creators' | 'stores'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'all-flavors' | 'main-flavors' | 'creators' | 'stores' | 'orders'>('calendar');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -23,17 +24,19 @@ export const Dashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       // Fetch all stats in parallel
-      const [sessionsResponse, flavorStatsData, storeStatsData, creatorStatsData] = await Promise.all([
+      const [sessionsResponse, flavorStatsData, storeStatsData, creatorStatsData, orderStatsData] = await Promise.all([
         apiClient.getSessions(1, 0), // Just get total count
         apiClient.getFlavorStats(),
         apiClient.getStoreStats(),
-        apiClient.getCreatorStats()
+        apiClient.getCreatorStats(),
+        apiClient.getOrderStats()
       ]);
       
       setTotalCount(sessionsResponse.total || 0);
       setFlavorStats(flavorStatsData);
       setStoreStats(storeStatsData);
       setCreatorStats(creatorStatsData);
+      setOrderStats(orderStatsData);
     } catch (err) {
       console.error('Dashboard error:', err);
     }
@@ -125,6 +128,16 @@ export const Dashboard: React.FC = () => {
             >
               店舗
             </button>
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`${
+                activeTab === 'orders'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              オーダー
+            </button>
           </nav>
         </div>
 
@@ -202,6 +215,26 @@ export const Dashboard: React.FC = () => {
                 </>
               ) : (
                 <p className="text-gray-500">店舗データがありません</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'orders' && orderStats && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">オーダー統計</h2>
+              {orderStats.orders.length > 0 ? (
+                <>
+                  <StatisticsChart 
+                    data={orderStats.orders.map(o => ({ name: o.order_details, count: o.count }))} 
+                    title="オーダー構成比" 
+                  />
+                  <StatisticsRanking 
+                    data={orderStats.orders.map(o => ({ name: o.order_details, count: o.count }))} 
+                    title="オーダーランキング" 
+                  />
+                </>
+              ) : (
+                <p className="text-gray-500">オーダーデータがありません</p>
               )}
             </div>
           )}

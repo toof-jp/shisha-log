@@ -407,3 +407,24 @@ func (h *SessionHandler) GetCreatorStats(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, stats)
 }
+
+// GetOrderStats godoc
+// @Summary Get order statistics
+// @Description Get order statistics for the authenticated user
+// @Tags statistics
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.OrderStats "Order statistics"
+// @Failure 500 {object} object{error=string} "Failed to get order statistics"
+// @Router /orders/stats [get]
+func (h *SessionHandler) GetOrderStats(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	stats, err := h.repo.GetOrderStats(c.Request().Context(), userID)
+	if err != nil {
+		log.Printf("GetOrderStats error for user %s: %v", userID, err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get order statistics"})
+	}
+
+	return c.JSON(http.StatusOK, stats)
+}

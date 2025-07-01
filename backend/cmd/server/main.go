@@ -9,13 +9,13 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/supabase-community/supabase-go"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/toof-jp/shisha-log/backend/docs"
 	"github.com/toof-jp/shisha-log/backend/internal/api"
 	"github.com/toof-jp/shisha-log/backend/internal/auth"
 	"github.com/toof-jp/shisha-log/backend/internal/config"
 	"github.com/toof-jp/shisha-log/backend/internal/repository"
 	"github.com/toof-jp/shisha-log/backend/internal/service"
 	"github.com/toof-jp/shisha-log/backend/internal/version"
-	_ "github.com/toof-jp/shisha-log/backend/docs"
 )
 
 // @title Shisha Log API
@@ -148,7 +148,7 @@ func main() {
 
 	// Flavor statistics route
 	protected.GET("/flavors/stats", sessionHandler.GetFlavorStats)
-	
+
 	// Store and creator statistics routes
 	protected.GET("/stores/stats", sessionHandler.GetStoreStats)
 	protected.GET("/creators/stats", sessionHandler.GetCreatorStats)

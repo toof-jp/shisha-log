@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/supabase-community/supabase-go"
 	postgrest "github.com/supabase-community/postgrest-go"
+	"github.com/supabase-community/supabase-go"
 	"github.com/toof-jp/shisha-log/backend/internal/models"
 )
 
@@ -38,6 +38,7 @@ func (r *SessionRepository) Create(ctx context.Context, session *models.ShishaSe
 		OrderDetails: session.OrderDetails,
 		MixName:      session.MixName,
 		Creator:      session.Creator,
+		Amount:       session.Amount,
 	}
 
 	data, _, err := r.client.From("shisha_sessions").
@@ -98,7 +99,7 @@ func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.Ses
 	var sessions []models.ShishaSession
 
 	data, _, err := r.client.From("shisha_sessions").
-		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,created_at,updated_at", "exact", false).
+		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,amount,created_at,updated_at", "exact", false).
 		Eq("id", id).
 		Execute()
 
@@ -156,7 +157,7 @@ func (r *SessionRepository) GetByUserID(ctx context.Context, userID string, limi
 	var sessions []models.ShishaSession
 
 	query := r.client.From("shisha_sessions").
-		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,created_at,updated_at", "exact", false).
+		Select("id,user_id,created_by,session_date,store_name,notes,order_details,mix_name,creator,amount,created_at,updated_at", "exact", false).
 		Eq("user_id", userID).
 		Order("created_at", &postgrest.OrderOpts{Ascending: false}) // Order by created_at descending
 
@@ -259,6 +260,9 @@ func (r *SessionRepository) Update(ctx context.Context, id string, update *model
 		} else {
 			updateMap["creator"] = *update.Creator
 		}
+	}
+	if update.Amount != nil {
+		updateMap["amount"] = *update.Amount
 	}
 
 	// Debug log
@@ -530,7 +534,7 @@ func (r *SessionRepository) GetByDate(ctx context.Context, userID string, date s
 }
 
 func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, startTime string, endTime string) ([]models.SessionWithFlavors, error) {
-	
+
 	// Parse start and end times for filtering
 	startTimeParsed, err := time.Parse(time.RFC3339, startTime)
 	if err != nil {
@@ -540,12 +544,12 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Query sessions with a wider range to account for potential Supabase timezone issues
 	// We'll filter manually afterwards
 	bufferStart := startTimeParsed.Add(-24 * time.Hour)
 	bufferEnd := endTimeParsed.Add(24 * time.Hour)
-	
+
 	data, _, err := r.client.From("shisha_sessions").
 		Select("*", "exact", false).
 		Eq("user_id", userID).
@@ -562,13 +566,13 @@ func (r *SessionRepository) GetByDateRange(ctx context.Context, userID string, s
 	if err := json.Unmarshal(data, &sessions); err != nil {
 		return nil, err
 	}
-	
+
 	// Manual filtering to ensure we only get sessions within the exact time range
 	var filteredSessions []models.ShishaSession
 	for _, session := range sessions {
 		// SessionDate is already a time.Time after JSON unmarshaling
 		sessionTime := session.SessionDate
-		
+
 		// Check if session falls within the requested range
 		if sessionTime.Equal(startTimeParsed) || (sessionTime.After(startTimeParsed) && sessionTime.Before(endTimeParsed)) {
 			filteredSessions = append(filteredSessions, session)

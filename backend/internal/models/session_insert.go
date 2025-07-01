@@ -13,6 +13,7 @@ type SessionInsert struct {
 	OrderDetails *string   `json:"order_details,omitempty"`
 	MixName      *string   `json:"mix_name,omitempty"`
 	Creator      *string   `json:"creator,omitempty"`
+	Amount       *int      `json:"amount,omitempty"`
 	// Explicitly exclude created_at and updated_at
 }
 

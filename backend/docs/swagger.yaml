@@ -9,6 +9,8 @@ definitions:
     type: object
   models.CreateSessionRequest:
     properties:
+      amount:
+        type: integer
       creator:
         type: string
       flavors:
@@ -93,6 +95,8 @@ definitions:
     type: object
   models.SessionWithFlavors:
     properties:
+      amount:
+        type: integer
       created_at:
         type: string
       created_by:
@@ -136,6 +140,8 @@ definitions:
     type: object
   models.UpdateSessionRequest:
     properties:
+      amount:
+        type: integer
       creator:
         type: string
       flavors:

@@ -203,6 +203,126 @@
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Logout user and revoke refresh token",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Get a new access token using refresh token from cookie",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "responses": {
+                    "200": {
+                        "description": "New access token generated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/models.User"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No refresh token provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Create a new user account with user ID and password",
@@ -500,6 +620,47 @@
                     },
                     "500": {
                         "description": "Failed to get flavor statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/stats": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get order statistics for the authenticated user",
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "Get order statistics",
+                "responses": {
+                    "200": {
+                        "description": "Order statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.OrderStats"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get order statistics",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1220,7 +1381,7 @@
     },
     "servers": [
         {
-            "url": "//localhost:8080/api/v1"
+            "url": "//localhost:8080/v1"
         }
     ],
     "components": {
@@ -1250,6 +1411,9 @@
                     "session_date"
                 ],
                 "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
                     "creator": {
                         "type": "string"
                     },
@@ -1328,6 +1492,28 @@
                     }
                 }
             },
+            "models.OrderCount": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "order_details": {
+                        "type": "string"
+                    }
+                }
+            },
+            "models.OrderStats": {
+                "type": "object",
+                "properties": {
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/models.OrderCount"
+                        }
+                    }
+                }
+            },
             "models.SessionFlavor": {
                 "type": "object",
                 "properties": {
@@ -1354,6 +1540,9 @@
             "models.SessionWithFlavors": {
                 "type": "object",
                 "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
                     "created_at": {
                         "type": "string"
                     },
@@ -1420,6 +1609,9 @@
             "models.UpdateSessionRequest": {
                 "type": "object",
                 "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
                     "creator": {
                         "type": "string"
                     },

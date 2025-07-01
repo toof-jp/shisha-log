@@ -219,7 +219,7 @@ export const Sessions: React.FC = () => {
           </div>
 
           {/* Desktop view - Table */}
-          <div className="hidden sm:block mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+          <div className="hidden sm:block mt-8 overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>

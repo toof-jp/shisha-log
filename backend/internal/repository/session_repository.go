@@ -107,7 +107,6 @@ func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.Ses
 		return nil, err
 	}
 
-
 	err = json.Unmarshal(data, &sessions)
 	if err != nil {
 		return nil, err

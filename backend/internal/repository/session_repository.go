@@ -107,17 +107,6 @@ func (r *SessionRepository) GetByID(ctx context.Context, id string) (*models.Ses
 		return nil, err
 	}
 
-	// Debug: Print raw JSON data
-	// TODO: Remove this debug log in production
-	if len(data) > 0 {
-		var rawData []map[string]interface{}
-		if err := json.Unmarshal(data, &rawData); err == nil && len(rawData) > 0 {
-			// Log only the first session to check timestamp format
-			if _, ok := rawData[0]["created_at"]; ok {
-				// fmt.Printf("DEBUG: created_at from Supabase: %v (type: %T)\n", ts, ts)
-			}
-		}
-	}
 
 	err = json.Unmarshal(data, &sessions)
 	if err != nil {

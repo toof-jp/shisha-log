@@ -191,6 +191,114 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Logout user and revoke refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Get a new access token using refresh token from cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "responses": {
+                    "200": {
+                        "description": "New access token generated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                },
+                                "user": {
+                                    "$ref": "#/definitions/models.User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No refresh token provided",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Create a new user account with user ID and password",
@@ -464,6 +572,42 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to get flavor statistics",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/stats": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get order statistics for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "Get order statistics",
+                "responses": {
+                    "200": {
+                        "description": "Order statistics",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderStats"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get order statistics",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -1087,6 +1231,9 @@ const docTemplate = `{
                 "session_date"
             ],
             "properties": {
+                "amount": {
+                    "type": "integer"
+                },
                 "creator": {
                     "type": "string"
                 },
@@ -1165,6 +1312,28 @@ const docTemplate = `{
                 }
             }
         },
+        "models.OrderCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "order_details": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrderStats": {
+            "type": "object",
+            "properties": {
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderCount"
+                    }
+                }
+            }
+        },
         "models.SessionFlavor": {
             "type": "object",
             "properties": {
@@ -1191,6 +1360,9 @@ const docTemplate = `{
         "models.SessionWithFlavors": {
             "type": "object",
             "properties": {
+                "amount": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1257,6 +1429,9 @@ const docTemplate = `{
         "models.UpdateSessionRequest": {
             "type": "object",
             "properties": {
+                "amount": {
+                    "type": "integer"
+                },
                 "creator": {
                     "type": "string"
                 },

@@ -169,6 +169,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout user
+         * @description Logout user and revoke refresh token
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Logged out successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh access token
+         * @description Get a new access token using refresh token from cookie
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description New access token generated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            token?: string;
+                            user?: components["schemas"]["models.User"];
+                        };
+                    };
+                };
+                /** @description No refresh token provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Invalid or expired refresh token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -464,6 +591,56 @@ export interface paths {
                     };
                 };
                 /** @description Failed to get flavor statistics */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get order statistics
+         * @description Get order statistics for the authenticated user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Order statistics */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.OrderStats"];
+                    };
+                };
+                /** @description Failed to get order statistics */
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -1075,6 +1252,7 @@ export interface components {
             flavor_name?: string;
         };
         "models.CreateSessionRequest": {
+            amount?: number;
             creator?: string;
             flavors?: components["schemas"]["models.CreateFlavorRequest"][];
             mix_name?: string;
@@ -1100,6 +1278,13 @@ export interface components {
             /** @description First flavors only */
             main_flavors?: components["schemas"]["models.FlavorCount"][];
         };
+        "models.OrderCount": {
+            count?: number;
+            order_details?: string;
+        };
+        "models.OrderStats": {
+            orders?: components["schemas"]["models.OrderCount"][];
+        };
         "models.SessionFlavor": {
             brand?: string;
             created_at?: string;
@@ -1109,6 +1294,7 @@ export interface components {
             session_id?: string;
         };
         "models.SessionWithFlavors": {
+            amount?: number;
             created_at?: string;
             created_by?: string;
             creator?: string;
@@ -1130,6 +1316,7 @@ export interface components {
             stores?: components["schemas"]["models.StoreCount"][];
         };
         "models.UpdateSessionRequest": {
+            amount?: number;
             creator?: string;
             flavors?: components["schemas"]["models.CreateFlavorRequest"][];
             mix_name?: string;

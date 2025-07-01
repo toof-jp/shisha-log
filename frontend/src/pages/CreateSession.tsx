@@ -19,6 +19,7 @@ const sessionSchema = z.object({
   })).optional(),
   notes: z.string().optional(),
   order_details: z.string().optional(),
+  amount: z.string().optional(),
 });
 
 type SessionFormData = z.infer<typeof sessionSchema>;
@@ -64,6 +65,7 @@ export const CreateSession: React.FC = () => {
         creator: session.creator || '',
         notes: session.notes || '',
         order_details: session.order_details || '',
+        amount: session.amount?.toString() || '',
         flavors: session.flavors?.map(f => ({
           flavor_name: f.flavor_name || '',
           brand: f.brand || '',
@@ -98,6 +100,7 @@ export const CreateSession: React.FC = () => {
         creator: data.creator || undefined,
         notes: data.notes || undefined,
         order_details: data.order_details || undefined,
+        amount: data.amount ? Number(data.amount) || undefined : undefined,
         flavors: filteredFlavors.length > 0 ? filteredFlavors.map(f => ({
           flavor_name: f.flavor_name || undefined,
           brand: f.brand || undefined,
@@ -286,6 +289,22 @@ export const CreateSession: React.FC = () => {
                 type="text"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder=""
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+                金額（任意）
+              </label>
+              <input
+                {...register('amount')}
+                type="number"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

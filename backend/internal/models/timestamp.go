@@ -40,7 +40,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 
 // MarshalJSON implements json.Marshaler interface
 func (ct CustomTime) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, ct.Time.Format(time.RFC3339))), nil
+	return []byte(fmt.Sprintf(`"%s"`, ct.Format(time.RFC3339))), nil
 }
 
 // Value implements driver.Valuer interface

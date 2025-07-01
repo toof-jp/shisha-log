@@ -14,6 +14,7 @@ type ShishaSession struct {
 	OrderDetails *string   `json:"order_details" db:"order_details"`
 	MixName      *string   `json:"mix_name" db:"mix_name"`
 	Creator      *string   `json:"creator" db:"creator"`
+	Amount       *int      `json:"amount" db:"amount"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -39,6 +40,7 @@ type CreateSessionRequest struct {
 	OrderDetails *string                `json:"order_details"`
 	MixName      *string                `json:"mix_name"`
 	Creator      *string                `json:"creator"`
+	Amount       *int                   `json:"amount"`
 	Flavors      *[]CreateFlavorRequest `json:"flavors"`
 }
 
@@ -54,6 +56,7 @@ type UpdateSessionRequest struct {
 	OrderDetails *string                `json:"order_details"`
 	MixName      *string                `json:"mix_name"`
 	Creator      *string                `json:"creator"`
+	Amount       *int                   `json:"amount"`
 	Flavors      *[]CreateFlavorRequest `json:"flavors"`
 }
 

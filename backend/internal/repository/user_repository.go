@@ -157,8 +157,8 @@ func (r *UserRepository) GetRefreshToken(token string) (*models.RefreshToken, er
 	`
 
 	err := r.db.QueryRow(query, token).
-		Scan(&refreshToken.ID, &refreshToken.UserID, &refreshToken.Token, 
-			&refreshToken.ExpiresAt, &refreshToken.CreatedAt, 
+		Scan(&refreshToken.ID, &refreshToken.UserID, &refreshToken.Token,
+			&refreshToken.ExpiresAt, &refreshToken.CreatedAt,
 			&refreshToken.UsedAt, &refreshToken.RevokedAt)
 	if err != nil {
 		return nil, err

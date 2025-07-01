@@ -51,6 +51,7 @@ export interface ShishaSession {
   flavors?: SessionFlavor[];
   notes?: string;
   order_details?: string;
+  amount?: number;
   created_at: string;
   updated_at: string;
 }
@@ -63,6 +64,7 @@ export interface CreateSessionRequest {
   flavors?: Omit<SessionFlavor, 'id' | 'session_id' | 'created_at'>[];
   notes?: string;
   order_details?: string;
+  amount?: number;
 }
 
 export interface SessionsResponse {

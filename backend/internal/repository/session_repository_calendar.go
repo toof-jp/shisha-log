@@ -52,7 +52,7 @@ func (r *SessionRepository) GetCalendarDataWithTimezone(ctx context.Context, use
 
 	// Count sessions by date in the user's timezone
 	dateCount := make(map[string]int)
-	
+
 	for _, session := range sessions {
 		// Parse the session date
 		sessionTime, err := time.Parse(time.RFC3339, session.SessionDate)

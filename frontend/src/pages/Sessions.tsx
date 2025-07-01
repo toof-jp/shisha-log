@@ -154,6 +154,11 @@ export const Sessions: React.FC = () => {
                         作成者: {session.creator}
                       </p>
                     )}
+                    {session.amount !== undefined && session.amount !== null && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        金額: ¥{session.amount.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -233,6 +238,9 @@ export const Sessions: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     フレーバー
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    金額
+                  </th>
                   <th className="relative px-6 py-3">
                     <span className="sr-only">アクション</span>
                   </th>
@@ -268,6 +276,9 @@ export const Sessions: React.FC = () => {
                           <span className="text-gray-400">フレーバーなし</span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {session.amount !== undefined && session.amount !== null ? `¥${session.amount.toLocaleString()}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link

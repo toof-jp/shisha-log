@@ -9,6 +9,8 @@ definitions:
     type: object
   models.CreateSessionRequest:
     properties:
+      amount:
+        type: integer
       creator:
         type: string
       flavors:
@@ -62,6 +64,20 @@ definitions:
           $ref: '#/definitions/models.FlavorCount'
         type: array
     type: object
+  models.OrderCount:
+    properties:
+      count:
+        type: integer
+      order_details:
+        type: string
+    type: object
+  models.OrderStats:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/models.OrderCount'
+        type: array
+    type: object
   models.SessionFlavor:
     properties:
       brand:
@@ -79,6 +95,8 @@ definitions:
     type: object
   models.SessionWithFlavors:
     properties:
+      amount:
+        type: integer
       created_at:
         type: string
       created_by:
@@ -122,6 +140,8 @@ definitions:
     type: object
   models.UpdateSessionRequest:
     properties:
+      amount:
+        type: integer
       creator:
         type: string
       flavors:
@@ -267,6 +287,74 @@ paths:
                 type: string
             type: object
       summary: User login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and revoke refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get a new access token using refresh token from cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access token generated
+          schema:
+            properties:
+              token:
+                type: string
+              user:
+                $ref: '#/definitions/models.User'
+            type: object
+        "400":
+          description: No refresh token provided
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Refresh access token
       tags:
       - auth
   /auth/register:
@@ -448,6 +536,28 @@ paths:
       security:
       - Bearer: []
       summary: Get flavor statistics
+      tags:
+      - statistics
+  /orders/stats:
+    get:
+      description: Get order statistics for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order statistics
+          schema:
+            $ref: '#/definitions/models.OrderStats'
+        "500":
+          description: Failed to get order statistics
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get order statistics
       tags:
       - statistics
   /sessions:

@@ -98,10 +98,11 @@ class ApiClient {
             return this.api(originalRequest);
           } catch (refreshError) {
             // Refresh failed, redirect to login
-            this.processQueue(refreshError, null);
+            const error = refreshError instanceof Error ? refreshError : new Error('Token refresh failed');
+            this.processQueue(error, null);
             this.clearToken();
             window.location.href = '/login';
-            return Promise.reject(refreshError);
+            return Promise.reject(error);
           } finally {
             this.isRefreshing = false;
           }

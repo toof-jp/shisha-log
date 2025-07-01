@@ -135,3 +135,67 @@ func (r *UserRepository) MarkPasswordResetTokenUsed(token string) error {
 	_, err := r.db.Exec(query, token)
 	return err
 }
+
+// Refresh Token methods
+
+func (r *UserRepository) CreateRefreshToken(userID uuid.UUID, token string, expiresAt time.Time) error {
+	query := `
+		INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+
+	_, err := r.db.Exec(query, uuid.New(), userID, token, expiresAt, time.Now())
+	return err
+}
+
+func (r *UserRepository) GetRefreshToken(token string) (*models.RefreshToken, error) {
+	refreshToken := &models.RefreshToken{}
+	query := `
+		SELECT id, user_id, token, expires_at, created_at, used_at, revoked_at
+		FROM refresh_tokens
+		WHERE token = $1 AND revoked_at IS NULL AND expires_at > NOW()
+	`
+
+	err := r.db.QueryRow(query, token).
+		Scan(&refreshToken.ID, &refreshToken.UserID, &refreshToken.Token, 
+			&refreshToken.ExpiresAt, &refreshToken.CreatedAt, 
+			&refreshToken.UsedAt, &refreshToken.RevokedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return refreshToken, nil
+}
+
+func (r *UserRepository) UpdateRefreshTokenUsedAt(token string) error {
+	query := `
+		UPDATE refresh_tokens
+		SET used_at = NOW()
+		WHERE token = $1
+	`
+
+	_, err := r.db.Exec(query, token)
+	return err
+}
+
+func (r *UserRepository) RevokeRefreshToken(token string) error {
+	query := `
+		UPDATE refresh_tokens
+		SET revoked_at = NOW()
+		WHERE token = $1
+	`
+
+	_, err := r.db.Exec(query, token)
+	return err
+}
+
+func (r *UserRepository) RevokeAllUserRefreshTokens(userID uuid.UUID) error {
+	query := `
+		UPDATE refresh_tokens
+		SET revoked_at = NOW()
+		WHERE user_id = $1 AND revoked_at IS NULL
+	`
+
+	_, err := r.db.Exec(query, userID)
+	return err
+}

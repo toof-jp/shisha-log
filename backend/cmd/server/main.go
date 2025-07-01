@@ -83,13 +83,13 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
 
 	// Configure CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: cfg.AllowedOrigins,
-		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowOrigins:     cfg.AllowedOrigins,
+		AllowMethods:     []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: true, // Allow cookies
 	}))
 
 	// Health check
@@ -120,6 +120,7 @@ func main() {
 	authGroup := apiGroup.Group("/auth")
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
+	authGroup.POST("/refresh", authHandler.Refresh)
 	authGroup.POST("/request-password-reset", authHandler.RequestPasswordReset)
 	authGroup.POST("/reset-password", authHandler.ResetPassword)
 
@@ -127,6 +128,7 @@ func main() {
 	protectedAuth := authGroup.Group("")
 	protectedAuth.Use(authMiddleware.Authenticate)
 	protectedAuth.POST("/change-password", authHandler.ChangePassword)
+	protectedAuth.POST("/logout", authHandler.Logout)
 
 	// Protected routes
 	protected := apiGroup.Group("")

@@ -19,7 +19,7 @@ const sessionSchema = z.object({
   })).optional(),
   notes: z.string().optional(),
   order_details: z.string().optional(),
-  amount: z.number().optional().or(z.string().transform((val) => val === '' ? undefined : Number(val))),
+  amount: z.string().optional(),
 });
 
 type SessionFormData = z.infer<typeof sessionSchema>;
@@ -65,7 +65,7 @@ export const CreateSession: React.FC = () => {
         creator: session.creator || '',
         notes: session.notes || '',
         order_details: session.order_details || '',
-        amount: session.amount,
+        amount: session.amount?.toString() || '',
         flavors: session.flavors?.map(f => ({
           flavor_name: f.flavor_name || '',
           brand: f.brand || '',
@@ -100,7 +100,7 @@ export const CreateSession: React.FC = () => {
         creator: data.creator || undefined,
         notes: data.notes || undefined,
         order_details: data.order_details || undefined,
-        amount: data.amount || undefined,
+        amount: data.amount ? Number(data.amount) || undefined : undefined,
         flavors: filteredFlavors.length > 0 ? filteredFlavors.map(f => ({
           flavor_name: f.flavor_name || undefined,
           brand: f.brand || undefined,

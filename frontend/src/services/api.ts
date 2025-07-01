@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type {
   AuthResponse,
   LoginRequest,
@@ -16,6 +16,10 @@ import type {
   OrderStats
 } from '../types/api';
 
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
 
 class ApiClient {
@@ -23,8 +27,8 @@ class ApiClient {
   private token: string | null = null;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: (value?: any) => void;
-    reject: (reason?: any) => void;
+    resolve: (value: string | null) => void;
+    reject: (reason: Error) => void;
   }> = [];
 
   constructor() {
@@ -59,7 +63,7 @@ class ApiClient {
     this.api.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ErrorResponse>) => {
-        const originalRequest = error.config as any;
+        const originalRequest = error.config as CustomAxiosRequestConfig;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
@@ -108,7 +112,7 @@ class ApiClient {
     );
   }
 
-  private processQueue(error: any, token: string | null = null) {
+  private processQueue(error: Error | null, token: string | null = null) {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);

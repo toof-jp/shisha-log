@@ -230,7 +230,7 @@ export const Sessions: React.FC = () => {
                     店舗
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ミックス
+                    ミックス名
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     作成者

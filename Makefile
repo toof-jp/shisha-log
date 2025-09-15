@@ -53,9 +53,9 @@ help:
 	@echo "  make infra-init         - Initialize Terraform"
 	@echo "  make infra-plan         - Plan infrastructure changes"
 	@echo "  make infra-apply        - Apply infrastructure changes"
-	@echo "  make infra-destroy      - Destroy infrastructure (with confirmation)"
-	@echo "  make infra-destroy-force - Force destroy without confirmation"
-	@echo "  make infra-destroy-except-backup - Destroy all except S3 backup bucket"
+	@echo "  make infra-destroy      - Destroy infrastructure except backup S3 bucket (with confirmation)"
+	@echo "  make infra-destroy-force - Force destroy except backup S3 bucket (no confirmation)"
+	@echo "  make infra-destroy-except-backup - (Deprecated: same as infra-destroy)"
 	@echo "  make infra-output       - Show Terraform outputs"
 	@echo ""
 	@echo "Docker Commands:"
@@ -260,11 +260,15 @@ infra-apply: update-ecr-password manage-acm-cert
 		-var="acm_certificate_arn=$${ACM_CERTIFICATE_ARN:-}"
 
 infra-destroy:
-	@echo "Destroying infrastructure..."
-	@echo "WARNING: This will destroy all infrastructure. Press Ctrl+C to cancel."
+	@echo "Destroying infrastructure (backup S3 bucket will be preserved)..."
+	@echo "WARNING: This will destroy all infrastructure except the backup bucket. Press Ctrl+C to cancel."
 	@sleep 3
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
+		-target=module.lightsail \
+		-target=module.frontend_cloudfront \
+		-target=module.route53 \
+		-target=module.acm \
 		-var="supabase_url=$$SUPABASE_URL" \
 		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
 		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
@@ -275,9 +279,13 @@ infra-destroy:
 
 # Force destroy without confirmation
 infra-destroy-force:
-	@echo "Force destroying infrastructure..."
+	@echo "Force destroying infrastructure (backup S3 bucket will be preserved)..."
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
+		-target=module.lightsail \
+		-target=module.frontend_cloudfront \
+		-target=module.route53 \
+		-target=module.acm \
 		-var="supabase_url=$$SUPABASE_URL" \
 		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
 		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \

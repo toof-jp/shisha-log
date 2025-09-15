@@ -41,6 +41,7 @@ echo "1. Updating Lightsail container with provided credentials..."
 
 # SSH to Lightsail and update using the registry credentials
 ssh -T -o StrictHostKeyChecking=no ubuntu@$LIGHTSAIL_IP << EOF
+mkdir -p /opt/shisha-log
 cd /opt/shisha-log || { echo "ERROR: /opt/shisha-log directory not found"; exit 1; }
 
 echo "Current container status..."

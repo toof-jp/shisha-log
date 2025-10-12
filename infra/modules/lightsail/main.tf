@@ -1,5 +1,5 @@
 # Lightsail instance
-# Note: SSL certificates are automatically obtained from BuyPass Go SSL
+# Note: SSL certificates are automatically obtained via Let's Encrypt using Certbot
 # instead of Let's Encrypt to avoid rate limiting issues
 resource "aws_lightsail_instance" "main" {
   name              = "${var.project_name}-${var.environment}"

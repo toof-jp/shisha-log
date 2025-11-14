@@ -26,8 +26,8 @@ chmod +x /usr/local/bin/docker-compose
 apt-get install nginx -y
 systemctl enable nginx
 
-# Install Certbot for SSL
-apt-get install certbot python3-certbot-nginx -y
+# Install Certbot and required DNS tools for SSL automation
+apt-get install certbot python3-certbot-nginx dnsutils -y
 
 # Install AWS CLI
 apt-get install awscli -y
@@ -150,9 +150,9 @@ EOF
 
 chmod +x /opt/shisha-log/deploy.sh
 
-# Create SSL certificate renewal cron job for BuyPass
+# Create SSL certificate renewal cron job
 cat > /etc/cron.d/certbot-renew << EOF
-0 2 * * * root certbot renew --quiet --nginx --server 'https://api.buypass.com/acme/directory'
+0 2 * * * root certbot renew --quiet
 EOF
 
 # Create SSL setup script
@@ -197,9 +197,9 @@ for i in \$(seq 1 \$MAX_RETRIES); do
     fi
 done
 
-# Obtain SSL certificate from BuyPass
-echo "Obtaining SSL certificate from BuyPass..."
-certbot --nginx -d \$DOMAIN --non-interactive --agree-tos --email \$EMAIL --server 'https://api.buypass.com/acme/directory'
+# Obtain SSL certificate from Let's Encrypt
+echo "Obtaining SSL certificate from Let's Encrypt..."
+certbot --nginx -d \$DOMAIN --non-interactive --agree-tos --email \$EMAIL
 
 if [ \$? -eq 0 ]; then
     echo "SSL certificate obtained successfully!"
@@ -314,8 +314,8 @@ systemctl daemon-reload
 systemctl enable setup-ssl.timer
 systemctl start setup-ssl.timer
 
-# Set up automatic SSL certificate renewal with BuyPass
-echo "0 12 * * * /usr/bin/certbot renew --quiet --server 'https://api.buypass.com/acme/directory' && /bin/systemctl reload nginx" | crontab -
+# Set up automatic SSL certificate renewal
+echo "0 12 * * * /usr/bin/certbot renew --quiet && /bin/systemctl reload nginx" | crontab -
 
 # Try to set up SSL immediately if DNS is ready
 echo "Attempting immediate SSL setup..."

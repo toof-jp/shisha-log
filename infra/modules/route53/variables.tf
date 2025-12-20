@@ -19,11 +19,6 @@ variable "cloudfront_zone_id" {
   type        = string
 }
 
-variable "lightsail_static_ip" {
-  description = "Lightsail instance static IP address"
-  type        = string
-}
-
 variable "create_apex_record" {
   description = "Whether to create A record for apex domain"
   type        = bool
@@ -34,10 +29,4 @@ variable "subdomain" {
   description = "Subdomain for the application (leave empty for apex domain)"
   type        = string
   default     = ""
-}
-
-variable "tags" {
-  description = "Tags to apply to all resources"
-  type        = map(string)
-  default     = {}
 }

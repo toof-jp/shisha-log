@@ -64,26 +64,3 @@ resource "aws_route53_record" "subdomain" {
     evaluate_target_health = false
   }
 }
-
-# A record for API subdomain pointing to Lightsail
-resource "aws_route53_record" "api" {
-  zone_id = local.zone_id
-  name    = var.subdomain != "" ? "api.${var.subdomain}" : "api"
-  type    = "A"
-  ttl     = 300
-  records = [var.lightsail_static_ip]
-}
-
-# Health check for API endpoint
-resource "aws_route53_health_check" "api" {
-  fqdn              = var.subdomain != "" ? "api.${var.subdomain}.${trimprefix(local.zone_name, ".")}" : "api.${trimprefix(local.zone_name, ".")}"
-  port              = 443
-  type              = "HTTPS"
-  resource_path     = "/health"
-  failure_threshold = "3"
-  request_interval  = "30"
-
-  tags = merge(var.tags, {
-    Name = "api-health-check"
-  })
-}

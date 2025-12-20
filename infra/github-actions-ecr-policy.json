@@ -32,15 +32,6 @@
         "ecr-public:PutImage"
       ],
       "Resource": "arn:aws:ecr-public::*:repository/shisha-log"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "lightsail:GetInstance",
-        "lightsail:GetInstances",
-        "lightsail:PutInstancePublicPorts"
-      ],
-      "Resource": "*"
     }
   ]
 }

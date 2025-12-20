@@ -63,7 +63,7 @@ Route 53 Hosted Zone (toof.jp)
 
 1. **Terraformでインフラをデプロイ**
    ```bash
-   make infra-unified-apply
+   make infra-apply
    ```
 
 2. **Route 53のネームサーバーを確認**
@@ -159,15 +159,14 @@ create_apex_record = true
 
 2. **Terraform設定を更新**
    ```bash
-   # terraform-unified.tfvarsを編集
-   vim infra/environments/prod/terraform-unified.tfvars
+   vim infra/environments/prod/terraform.tfvars
    ```
 
 3. **インフラをデプロイ**
    ```bash
-   make infra-unified-init
-   make infra-unified-plan
-   make infra-unified-apply
+   make infra-init
+   make infra-plan
+   make infra-apply
    ```
 
 4. **DNS伝播を待つ**
@@ -181,19 +180,11 @@ create_apex_record = true
 
 ## Route 53の機能
 
-### ヘルスチェック
-
-Terraformで自動的に設定される：
-- **エンドポイント**: `https://api.example.com/health`
-- **間隔**: 30秒
-- **失敗しきい値**: 3回
-- **プロトコル**: HTTPS
-
 ### レコードタイプ
 
-- **Aレコード**: api.example.com → Lightsail IP
 - **ALIASレコード**: shisha.example.com → CloudFront
 - **CNAMEレコード**: www.example.com → CloudFront（オプション）
+- **A/CNAMEレコード (手動)**: api.example.com → Kubernetes Ingress / GKE Load Balancer
 
 ### 料金
 
@@ -248,8 +239,9 @@ aws cloudfront get-distribution --id E1234567890ABC \
 # ヘルスチェックの詳細を確認
 aws route53 get-health-check --health-check-id XXXXXX
 
-# Lightsailのセキュリティグループを確認
-aws lightsail get-instance --instance-name shisha-log-prod
+# Kubernetes Ingress/Load Balancerを確認
+kubectl describe ingress -n shisha-log api
+kubectl get svc -n shisha-log --selector app=backend
 ```
 
 ## ベストプラクティス

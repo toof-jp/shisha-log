@@ -9,7 +9,7 @@
 **解決方法**:
 ```bash
 # 1. インフラをデプロイ
-make infra-unified-apply
+make infra-apply
 
 # 2. 出力を確認
 make infra-output
@@ -39,23 +39,12 @@ ECR_ALIAS=your-alias
 **解決方法**:
 ```bash
 # オプション1: CloudFrontデフォルトドメインを使用
-# terraform-unified.tfvarsで以下を確認
-domain_name = ""  # 空にする
+# infra/environments/prod/terraform.tfvars で domain_name を空文字にする
 
 # オプション2: ACM証明書を作成
 make create-acm-cert
-# ARNを.envに追加
+# ARNを.env に追加
 ACM_CERTIFICATE_ARN=arn:aws:acm:us-east-1:xxx:certificate/xxx
-```
-
-### ❌ CloudFront: origin name cannot be an IP address
-
-**原因**: CloudFrontのオリジンにIPアドレスを直接指定している
-
-**解決方法**:
-```hcl
-# terraform-unified.tfvarsに追加
-backend_domain_name = "api.shisha.toof.jp"
 ```
 
 ## 開発環境関連

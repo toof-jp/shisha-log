@@ -1,13 +1,3 @@
-output "lightsail_instance_name" {
-  description = "Name of the Lightsail instance"
-  value       = module.lightsail.instance_name
-}
-
-output "lightsail_static_ip" {
-  description = "Static IP address of Lightsail instance"
-  value       = module.lightsail.static_ip_address
-}
-
 output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = module.frontend_cloudfront.cloudfront_distribution_id
@@ -43,14 +33,10 @@ output "dns_configuration" {
     Name: @
     Value: ${module.frontend_cloudfront.cloudfront_domain_name}
     
-    Backend API (Lightsail):
-    Type: A
-    Name: api
-    Value: ${module.lightsail.static_ip_address}
+    Any Kubernetes/GKE ingress records should be managed separately once the new backend endpoint is available.
     
-    After DNS propagation, access your application at:
-    - Frontend: https://${var.domain_name}
-    - API: https://api.${var.domain_name}/api/v1
+    After DNS propagation, access your frontend at:
+    - https://${var.domain_name}
   EOT
 }
 
@@ -62,13 +48,8 @@ output "deployment_instructions" {
     2. aws s3 sync dist/ s3://${module.frontend_cloudfront.s3_bucket_name}/ --delete
     3. aws cloudfront create-invalidation --distribution-id ${module.frontend_cloudfront.cloudfront_distribution_id} --paths "/*"
     
-    Backend deployment:
-    1. Build and push Docker image to ${var.container_registry}
-    2. Lightsail will automatically pull and deploy the new image
-    
     Environment updates:
     - Frontend: VITE_API_BASE_URL=https://api.${var.domain_name}/api/v1
-    - Backend: ALLOWED_ORIGINS=https://${var.domain_name}
   EOT
 }
 
@@ -86,11 +67,6 @@ output "route53_name_servers" {
 output "route53_app_fqdn" {
   description = "Application fully qualified domain name"
   value       = var.use_route53 ? module.route53[0].app_fqdn : null
-}
-
-output "route53_api_fqdn" {
-  description = "API fully qualified domain name"
-  value       = var.use_route53 ? module.route53[0].api_fqdn : null
 }
 
 # ACM Certificate outputs

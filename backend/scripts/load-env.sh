@@ -37,24 +37,17 @@ export_tf_var() {
 # Set environment-specific defaults
 if [ "$ENV" = "prod" ]; then
     export TF_VAR_environment="prod"
-    export TF_VAR_bundle_id="${BUNDLE_ID:-small_2_0}"
-    export TF_VAR_domain_name="${DOMAIN_NAME:-api.shisha.toof.jp}"
-    export TF_VAR_container_image="${CONTAINER_IMAGE:-public.ecr.aws/571600847070/shisha-log:latest}"
-    export TF_VAR_allowed_origins="${ALLOWED_ORIGINS:-https://shisha.toof.jp,https://www.shisha.toof.jp}"
+    export TF_VAR_domain_name="${DOMAIN_NAME:-shisha.toof.jp}"
+    export TF_VAR_backend_domain_name="${BACKEND_DOMAIN_NAME:-api.shisha.toof.jp}"
 else
     export TF_VAR_environment="dev"
-    export TF_VAR_bundle_id="${BUNDLE_ID:-nano_2_0}"
-    export TF_VAR_domain_name="${DOMAIN_NAME:-api-dev.shisha.toof.jp}"
-    export TF_VAR_container_image="${CONTAINER_IMAGE:-public.ecr.aws/571600847070/shisha-log:dev-latest}"
-    export TF_VAR_allowed_origins="${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,https://dev.shisha.toof.jp}"
+    export TF_VAR_domain_name="${DOMAIN_NAME:-dev.shisha.toof.jp}"
+    export TF_VAR_backend_domain_name="${BACKEND_DOMAIN_NAME:-api-dev.shisha.toof.jp}"
 fi
 
 # Set common defaults
 export TF_VAR_project_name="${PROJECT_NAME:-shisha-log}"
 export TF_VAR_aws_region="${AWS_REGION:-ap-northeast-1}"
-export TF_VAR_availability_zone="${AVAILABILITY_ZONE:-ap-northeast-1a}"
-export TF_VAR_container_registry="${CONTAINER_REGISTRY:-public.ecr.aws}"
-export TF_VAR_token_duration="${TOKEN_DURATION:-24h}"
 
 echo "✓ Environment-specific defaults set for ${ENV}"
 
@@ -95,50 +88,38 @@ if [ -f "$ENV_FILE" ]; then
                     export_tf_var "aws_region" "$var_value"
                     echo "✓ AWS_REGION set"
                     ;;
-                AVAILABILITY_ZONE)
-                    export_tf_var "availability_zone" "$var_value"
-                    ;;
-                BUNDLE_ID)
-                    export_tf_var "bundle_id" "$var_value"
-                    ;;
                 DOMAIN_NAME)
                     export_tf_var "domain_name" "$var_value"
                     ;;
-                # Container registry
-                CONTAINER_REGISTRY)
-                    export_tf_var "container_registry" "$var_value"
-                    ;;
-                CONTAINER_IMAGE)
-                    export_tf_var "container_image" "$var_value"
-                    ;;
-                REGISTRY_USERNAME)
-                    export_tf_var "registry_username" "$var_value"
-                    ;;
-                REGISTRY_PASSWORD)
-                    export_tf_var "registry_password" "$var_value"
-                    ;;
-                # Supabase configuration
-                SUPABASE_URL)
-                    export_tf_var "supabase_url" "$var_value"
-                    ;;
-                SUPABASE_ANON_KEY)
-                    export_tf_var "supabase_anon_key" "$var_value"
-                    ;;
-                SUPABASE_SERVICE_ROLE_KEY)
-                    export_tf_var "supabase_service_role_key" "$var_value"
-                    ;;
-                # Application configuration
-                JWT_SECRET)
-                    export_tf_var "jwt_secret" "$var_value"
+                BACKEND_DOMAIN_NAME)
+                    export_tf_var "backend_domain_name" "$var_value"
                     ;;
                 DATABASE_URL)
                     export_tf_var "database_url" "$var_value"
                     ;;
-                ALLOWED_ORIGINS)
-                    export_tf_var "allowed_origins" "$var_value"
+                ROUTE53_DOMAIN_NAME)
+                    export_tf_var "route53_domain_name" "$var_value"
                     ;;
-                TOKEN_DURATION)
-                    export_tf_var "token_duration" "$var_value"
+                ROUTE53_HOSTED_ZONE_ID)
+                    export_tf_var "route53_hosted_zone_id" "$var_value"
+                    ;;
+                USE_ROUTE53)
+                    export_tf_var "use_route53" "$var_value"
+                    ;;
+                CREATE_APEX_RECORD)
+                    export_tf_var "create_apex_record" "$var_value"
+                    ;;
+                SUBDOMAIN)
+                    export_tf_var "subdomain" "$var_value"
+                    ;;
+                BACKUP_RETENTION_DAYS)
+                    export_tf_var "backup_retention_days" "$var_value"
+                    ;;
+                CREATE_ACM_CERTIFICATE)
+                    export_tf_var "create_acm_certificate" "$var_value"
+                    ;;
+                ACM_CERTIFICATE_ARN)
+                    export_tf_var "acm_certificate_arn" "$var_value"
                     ;;
                 # AWS credentials
                 AWS_ACCESS_KEY_ID)

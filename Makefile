@@ -2,7 +2,7 @@
 .PHONY: backend-build backend-run backend-dev backend-test backend-clean backend-deps backend-fmt backend-lint backend-swagger
 .PHONY: frontend-build frontend-dev frontend-test frontend-clean frontend-install frontend-lint frontend-typecheck
 .PHONY: docker-build docker-run docker-push ecr-login update-ecr-password
-.PHONY: deploy-frontend deploy-backend deploy-all
+.PHONY: deploy-frontend deploy-all
 .PHONY: infra-init infra-plan infra-apply infra-destroy infra-destroy-force infra-output infra-apply-module
 .PHONY: db-migrate db-reset db-status
 .PHONY: backup-test backup-trigger backup-list backup-download
@@ -35,8 +35,7 @@ help:
 	@echo ""
 	@echo "Deployment Commands:"
 	@echo "  make deploy-frontend    - Deploy frontend to S3/CloudFront"
-	@echo "  make deploy-backend     - Build and push backend Docker image"
-	@echo "  make deploy-all         - Deploy both frontend and backend"
+	@echo "  make deploy-all         - Deploy frontend plus run post-deploy reminder"
 	@echo ""
 	@echo "Database Migration Commands:"
 	@echo "  make db-migrate         - Apply database migrations"
@@ -180,12 +179,8 @@ deploy-frontend: frontend-build
 	echo "Using CloudFront distribution ID: $$CLOUDFRONT_DISTRIBUTION_ID"; \
 	cd frontend && ./scripts/deploy.sh
 
-deploy-backend: docker-build docker-push
-	@echo "Updating Lightsail instance with new image..."
-	@./backend/scripts/update-lightsail-with-auth.sh
-
-deploy-all: deploy-frontend deploy-backend
-	@echo "Full deployment completed!"
+deploy-all: deploy-frontend
+	@echo "Frontend deployed. Backend updates are handled via Kubernetes manifests."
 
 # Docker commands
 docker-build:
@@ -234,30 +229,14 @@ infra-plan: manage-acm-cert
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	if [ -f .acm_cert ]; then . ./.acm_cert; fi; \
 	cd infra && terraform plan -var-file=environments/prod/terraform.tfvars \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
-		-var="create_acm_certificate=$${CREATE_ACM_CERTIFICATE:-true}" \
-		-var="acm_certificate_arn=$${ACM_CERTIFICATE_ARN:-}"
+		-var="database_url=$$DATABASE_URL"
 
 infra-apply: update-ecr-password manage-acm-cert
 	@echo "Applying infrastructure..."
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	if [ -f .acm_cert ]; then . ./.acm_cert; fi; \
 	cd infra && terraform apply -var-file=environments/prod/terraform.tfvars \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
-		-var="create_acm_certificate=$${CREATE_ACM_CERTIFICATE:-true}" \
-		-var="acm_certificate_arn=$${ACM_CERTIFICATE_ARN:-}"
+		-var="database_url=$$DATABASE_URL"
 
 infra-destroy:
 	@echo "Destroying infrastructure (backup S3 bucket will be preserved)..."
@@ -265,34 +244,20 @@ infra-destroy:
 	@sleep 3
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
-		-target=module.lightsail \
 		-target=module.frontend_cloudfront \
 		-target=module.route53 \
 		-target=module.acm \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD"
+		-var="database_url=$$DATABASE_URL"
 
 # Force destroy without confirmation
 infra-destroy-force:
 	@echo "Force destroying infrastructure (backup S3 bucket will be preserved)..."
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
-		-target=module.lightsail \
 		-target=module.frontend_cloudfront \
 		-target=module.route53 \
 		-target=module.acm \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
 		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD" \
 		-auto-approve
 
 # Destroy all infrastructure except S3 backup bucket
@@ -303,18 +268,11 @@ infra-destroy-except-backup:
 	@echo "Note: The S3 backup bucket has prevent_destroy=true and will be preserved."
 	@if [ -f .env ]; then export $$(grep -v '^#' .env | xargs); fi; \
 	cd infra && terraform destroy -var-file=environments/prod/terraform.tfvars \
-		-target=module.lightsail \
 		-target=module.frontend \
 		-target=module.frontend_cloudfront \
 		-target=module.route53 \
 		-target=module.acm \
-		-var="supabase_url=$$SUPABASE_URL" \
-		-var="supabase_anon_key=$$SUPABASE_ANON_KEY" \
-		-var="supabase_service_role_key=$$SUPABASE_SERVICE_ROLE_KEY" \
-		-var="jwt_secret=$$JWT_SECRET" \
-		-var="database_url=$$DATABASE_URL" \
-		-var="registry_username=$$REGISTRY_USERNAME" \
-		-var="registry_password=$$REGISTRY_PASSWORD"
+		-var="database_url=$$DATABASE_URL"
 
 infra-output:
 	cd infra && terraform output

@@ -2,143 +2,69 @@
 
 ## Overview
 
-Shisha Log uses a unified domain architecture with path-based routing:
+Shisha Log now separates the concerns between AWS edge services and the Kubernetes runtime:
 
-- **Frontend**: Static SPA hosted on AWS S3 + CloudFront
-- **Backend**: Dockerized API running on AWS Lightsail
-- **Database**: PostgreSQL managed by Supabase
+- **Frontend**: React SPA built with Vite, stored in S3 and delivered worldwide via CloudFront.
+- **Backend**: Go API running on a GKE cluster. Kubernetes manifests (External Secrets Operator, Ingress, HPA, etc.) live outside this repo.
+- **Database**: Supabase (PostgreSQL) plus a Lambda-based backup routine in AWS.
 
-## Domain Configuration
+## Domain configuration
 
 ```
-shisha.toof.jp          → CloudFront → S3 (Frontend)
-shisha.toof.jp/api/*    → CloudFront → Lightsail (Backend API)
+shisha.toof.jp       → CloudFront → S3 (frontend SPA)
+api.shisha.toof.jp   → GCP HTTPS Load Balancer / GKE Ingress (backend API)
 ```
 
-This unified approach is achieved through CloudFront distribution with multiple origins and path-based behaviors.
+Terraform only manages the frontend/edge portion. The API subdomain should be pointed to the Kubernetes ingress endpoint once it is provisioned.
 
-## AWS Services
+## AWS components
 
-### Frontend Infrastructure
+### Frontend edge
+1. **S3 bucket** – versioned bucket that stores the compiled assets.
+2. **CloudFront distribution** – handles HTTPS, caching, compression and SPA-friendly error responses. The ACM certificate is issued in `us-east-1`.
 
-1. **S3 Bucket**: Stores static frontend files (HTML, CSS, JS)
-2. **CloudFront Distribution**: 
-   - Global CDN for frontend assets
-   - HTTPS termination with ACM certificate
-   - Custom error pages for SPA routing (404 → index.html)
-   - Optimized cache configuration:
-     - `/assets/*` (hashed files): 1 year cache
-     - `index.html`: 1 day cache (invalidated on deploy)
-     - Other static files: 1 day cache
+### DNS (optional)
+- **Route 53** – if `use_route53=true`, Terraform updates the hosted zone to alias the domain to CloudFront. Otherwise reuse your existing registrar.
 
-### Backend Infrastructure
+### Database backups
+1. **EventBridge rule** – triggers weekly at 09:00 JST (00:00 UTC).
+2. **Lambda function** – uses the `DATABASE_URL` secret to run `pg_dump` against Supabase.
+3. **S3 backup bucket** – stores compressed SQL dumps with 30‑day lifecycle policy.
 
-1. **Lightsail Container Service**:
-   - Runs Docker containers
-   - Auto-deployment from ECR Public
-   - Static IP for DNS A record
-   - Health checks on `/health` endpoint
+## Kubernetes backend (high level)
 
-2. **ECR Public Repository**:
-   - Stores Docker images
-   - Public registry for easy access
+- Secrets live in **Google Cloud Secret Manager** and are synced into namespaces with **External Secrets Operator**. See `secretstore-gcpsm.yaml` for the ClusterSecretStore template and `bootstrap-gcp-secrets.sh` for provisioning GSM entries.
+- Deployments/Services/Ingress rules are managed in the Kubernetes repo. The ingress exposes `api.shisha.toof.jp`, and Route 53 (or another DNS provider) should have an `A`/`CNAME` pointing to that load balancer.
 
-## Terraform Modules
+## Terraform modules in this repo
 
-### frontend-cloudfront
-- Manages S3 bucket and CloudFront distribution
-- Handles SSL/TLS certificates
-- Configures caching and error responses
+| Module | Purpose |
+| ------ | ------- |
+| `acm` | Issues/validates certificates in `us-east-1` for CloudFront aliases. |
+| `frontend-cloudfront` | Creates the S3 bucket, CloudFront distribution and outputs deployment metadata. |
+| `route53` | (Optional) Creates Apex/WWW aliases for the CloudFront distribution. |
+| `backup` | Sets up the Lambda + S3 backup workflow for Supabase. |
 
-### lightsail
-- Provisions container service
-- Manages deployments and health checks
-- Assigns static IP address
+## Deployment flow
 
-### acm
-- Manages SSL certificates in us-east-1 (for CloudFront)
-- Handles DNS validation
+1. **Backend (Kubernetes)** – build/push the backend image to your registry, update Helm/Kustomize manifests, and apply via `kubectl`/GitOps. Secrets are pulled from GSM via ESO.
+2. **Frontend** – `make deploy-frontend` builds the Vite app, syncs files to S3, and invalidates CloudFront.
+3. **Infrastructure changes** – `make infra-plan` / `make infra-apply` after exporting `TF_VAR_database_url`.
 
-### route53 (optional)
-- Manages DNS records if using Route 53
-- Creates A and CNAME records
+## Backup operations
 
-### backup
-- S3 bucket for database backup storage
-- Lambda function for backup execution
-- EventBridge rule for weekly scheduling
-- 30-day retention policy
-
-## Deployment Flow
-
-### Frontend Deployment
 ```bash
-make deploy-frontend
-```
-1. Build React app
-2. Upload to S3
-3. Invalidate CloudFront cache
-
-### Backend Deployment
-```bash
-make deploy-backend
-```
-1. Build Docker image
-2. Push to ECR Public
-3. Update Lightsail container
-
-## Environment Configuration
-
-Frontend connects to backend using:
-```
-VITE_API_BASE_URL=https://api.shisha.toof.jp/v1
+make backup-test        # run Lambda locally
+make backup-trigger     # invoke the AWS backup pipeline
+make backup-list        # show stored dumps
+make backup-download    # pull the most recent dump
 ```
 
-Backend allows CORS from:
-```
-ALLOWED_ORIGINS=https://shisha.toof.jp
-```
+Recovery steps: download a dump, `gunzip`, then `psql $DATABASE_URL < backup.sql`.
 
-## Database Backup System
+## Security highlights
 
-### Architecture
-The backup system uses serverless AWS services for automated database backups:
-
-1. **EventBridge Rule**: Triggers backups weekly on Monday at 9:00 AM JST
-2. **Lambda Function**: Connects to PostgreSQL and creates SQL dumps
-3. **S3 Bucket**: Stores compressed backups with encryption
-4. **Lifecycle Policy**: Automatically deletes backups older than 30 days
-
-### Backup Operations
-
-#### Automated Backups
-- Schedule: Every Monday at 9:00 AM JST (0:00 UTC)
-- Format: Compressed SQL dump (`.sql.gz`)
-- Storage: `s3://shisha-log-prod-db-backups/backups/YYYY/MM/`
-- Naming: `shisha-log_prod_dbname_YYYYMMDD_HHMMSS.sql.gz`
-
-#### Manual Backup Commands
-```bash
-# Test backup locally
-make backup-test
-
-# Trigger manual backup
-make backup-trigger
-
-# List recent backups
-make backup-list
-
-# Download latest backup
-make backup-download
-```
-
-#### Recovery Process
-1. Download backup file: `make backup-download`
-2. Extract: `gunzip backup-file.sql.gz`
-3. Restore: `psql $DATABASE_URL < backup-file.sql`
-
-### Security
-- S3 bucket encrypted with AES-256
-- Public access blocked
-- Lambda function has minimal IAM permissions
-- Database credentials stored as environment variables
+- CloudFront enforces TLS 1.2+, caches only safe paths, and strips unneeded headers.
+- S3 buckets and Route 53 hosted zones remain private except for CloudFront access.
+- Backups are encrypted at-rest in S3 and rotated automatically.
+- Secrets for the runtime are centralized in GSM, reducing scattered `.env` files.

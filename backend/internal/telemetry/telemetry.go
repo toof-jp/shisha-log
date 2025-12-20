@@ -12,6 +12,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
 
+const serviceNamespace = "shisha-log"
+
 // Init configures the global tracer provider for OTLP/HTTP exports.
 func Init(ctx context.Context, serviceName, environment, endpoint string) (func(context.Context) error, error) {
 	exporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(endpoint))
@@ -24,6 +26,7 @@ func Init(ctx context.Context, serviceName, environment, endpoint string) (func(
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceName(serviceName),
+			semconv.ServiceNamespace(serviceNamespace),
 			semconv.DeploymentEnvironmentName(environment),
 		),
 	)

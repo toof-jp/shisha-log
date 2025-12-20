@@ -17,6 +17,7 @@ type Config struct {
 	JWTSecret           string
 	AllowedOrigins      []string
 	DatabaseURL         string
+	OTLPEndpoint        string
 	TokenDuration       string
 }
 
@@ -37,6 +38,7 @@ func LoadConfig() (*Config, error) {
 		SupabaseServiceRole: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
 		JWTSecret:           getEnv("JWT_SECRET", ""),
 		DatabaseURL:         getEnv("DATABASE_URL", ""),
+		OTLPEndpoint:        getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"),
 		TokenDuration:       getEnv("TOKEN_DURATION", "24h"),
 	}
 

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,8 +17,12 @@ import (
 	"github.com/toof-jp/shisha-log/backend/internal/config"
 	"github.com/toof-jp/shisha-log/backend/internal/repository"
 	"github.com/toof-jp/shisha-log/backend/internal/service"
+	"github.com/toof-jp/shisha-log/backend/internal/telemetry"
 	"github.com/toof-jp/shisha-log/backend/internal/version"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 )
+
+const serviceName = "shisha-log-backend"
 
 // @title Shisha Log API
 // @version 1.0
@@ -38,11 +44,26 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
+	ctx := context.Background()
+
 	// Load configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal("Failed to load config:", err)
 	}
+
+	otelShutdown, err := telemetry.Init(ctx, serviceName, cfg.Environment, cfg.OTLPEndpoint)
+	if err != nil {
+		log.Fatal("Failed to initialize telemetry:", err)
+	}
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := otelShutdown(shutdownCtx); err != nil {
+			log.Printf("Failed to shut down telemetry: %v", err)
+		}
+	}()
 
 	// Initialize database connection
 	db, err := sql.Open("postgres", cfg.DatabaseURL)
@@ -85,6 +106,7 @@ func main() {
 	e := echo.New()
 
 	// Middleware
+	e.Use(otelecho.Middleware(serviceName))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 

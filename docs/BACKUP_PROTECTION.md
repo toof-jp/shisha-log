@@ -69,7 +69,6 @@ Before destroying infrastructure, always plan first:
 ```bash
 # Plan destruction except backup
 cd infra && terraform plan -destroy \
-  -target=module.lightsail \
   -target=module.frontend \
   -target=module.frontend_cloudfront \
   -target=module.route53 \

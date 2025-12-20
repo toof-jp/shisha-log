@@ -41,8 +41,8 @@ Run `make help` to see all available commands:
 
 - **Development**: `backend-dev`, `frontend-dev`
 - **Build**: `backend-build`, `frontend-build`
-- **Deploy**: `deploy-frontend`, `deploy-backend`, `deploy-all`
-- **Infrastructure**: `infra-init`, `infra-apply`, `infra-unified-apply`
+- **Deploy**: `deploy-frontend`, `deploy-all` (backend deploys via Kubernetes manifests)
+- **Infrastructure**: `infra-init`, `infra-plan`, `infra-apply`
 
 ## Environment Files
 
@@ -54,8 +54,10 @@ Single environment file in the project root:
 
 The application uses separate domains for frontend and backend:
 - **Frontend**: S3 + CloudFront (https://shisha.toof.jp)
-- **Backend**: AWS Lightsail with Docker (https://api.shisha.toof.jp)
-- **Database**: PostgreSQL via Supabase
+- **Backend**: GKE (Kubernetes) behind HTTPS load balancing (https://api.shisha.toof.jp)
+- **Database**: PostgreSQL via Supabase, with backups managed in AWS Lambda/S3
+
+Kubernetes fetches credentials from Google Cloud Secret Manager through External Secrets Operator. Use `secretstore-gcpsm.yaml` and `bootstrap-gcp-secrets.sh` to keep GSM in sync with `.env` secrets.
 
 See `docs/` for detailed deployment guides.
 

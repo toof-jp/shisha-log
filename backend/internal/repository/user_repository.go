@@ -1,12 +1,21 @@
 package repository
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/toof-jp/shisha-log/backend/internal/models"
 )
+
+// hashToken returns the SHA-256 hex digest of a token. Only digests are
+// stored so that a database leak does not directly expose usable tokens.
+func hashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
 
 type UserRepository struct {
 	db *sql.DB
@@ -104,7 +113,7 @@ func (r *UserRepository) CreatePasswordResetToken(userID uuid.UUID, token string
 		VALUES ($1, $2, $3, $4, $5)
 	`
 
-	_, err := r.db.Exec(query, uuid.New(), userID, token, expiresAt, time.Now())
+	_, err := r.db.Exec(query, uuid.New(), userID, hashToken(token), expiresAt, time.Now())
 	return err
 }
 
@@ -116,7 +125,7 @@ func (r *UserRepository) GetPasswordResetToken(token string) (*models.PasswordRe
 		WHERE token = $1 AND used = false AND expires_at > NOW()
 	`
 
-	err := r.db.QueryRow(query, token).
+	err := r.db.QueryRow(query, hashToken(token)).
 		Scan(&resetToken.ID, &resetToken.UserID, &resetToken.Token, &resetToken.ExpiresAt, &resetToken.Used, &resetToken.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -132,7 +141,7 @@ func (r *UserRepository) MarkPasswordResetTokenUsed(token string) error {
 		WHERE token = $1
 	`
 
-	_, err := r.db.Exec(query, token)
+	_, err := r.db.Exec(query, hashToken(token))
 	return err
 }
 
@@ -144,7 +153,7 @@ func (r *UserRepository) CreateRefreshToken(userID uuid.UUID, token string, expi
 		VALUES ($1, $2, $3, $4, $5)
 	`
 
-	_, err := r.db.Exec(query, uuid.New(), userID, token, expiresAt, time.Now())
+	_, err := r.db.Exec(query, uuid.New(), userID, hashToken(token), expiresAt, time.Now())
 	return err
 }
 
@@ -156,7 +165,7 @@ func (r *UserRepository) GetRefreshToken(token string) (*models.RefreshToken, er
 		WHERE token = $1 AND revoked_at IS NULL AND expires_at > NOW()
 	`
 
-	err := r.db.QueryRow(query, token).
+	err := r.db.QueryRow(query, hashToken(token)).
 		Scan(&refreshToken.ID, &refreshToken.UserID, &refreshToken.Token,
 			&refreshToken.ExpiresAt, &refreshToken.CreatedAt,
 			&refreshToken.UsedAt, &refreshToken.RevokedAt)
@@ -174,7 +183,7 @@ func (r *UserRepository) UpdateRefreshTokenUsedAt(token string) error {
 		WHERE token = $1
 	`
 
-	_, err := r.db.Exec(query, token)
+	_, err := r.db.Exec(query, hashToken(token))
 	return err
 }
 
@@ -185,7 +194,7 @@ func (r *UserRepository) RevokeRefreshToken(token string) error {
 		WHERE token = $1
 	`
 
-	_, err := r.db.Exec(query, token)
+	_, err := r.db.Exec(query, hashToken(token))
 	return err
 }
 

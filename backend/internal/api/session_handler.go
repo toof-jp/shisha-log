@@ -185,9 +185,6 @@ func (h *SessionHandler) UpdateSession(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
-	// Debug log
-	c.Logger().Infof("UpdateSession request for ID %s: %+v", sessionID, req)
-
 	if err := h.repo.Update(c.Request().Context(), sessionID, &req); err != nil {
 		c.Logger().Errorf("Failed to update session %s: %v", sessionID, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update session"})

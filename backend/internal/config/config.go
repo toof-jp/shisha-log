@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -44,6 +45,14 @@ func LoadConfig() (*Config, error) {
 
 	allowedOrigins := getEnv("ALLOWED_ORIGINS", "http://localhost:3000")
 	config.AllowedOrigins = strings.Split(allowedOrigins, ",")
+
+	// An empty secret would make every JWT trivially forgeable.
+	if config.JWTSecret == "" {
+		return nil, errors.New("JWT_SECRET must be set")
+	}
+	if len(config.JWTSecret) < 32 {
+		log.Println("WARNING: JWT_SECRET is shorter than 32 bytes; use a longer random secret")
+	}
 
 	return config, nil
 }

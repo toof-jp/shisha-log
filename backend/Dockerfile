@@ -38,12 +38,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
 FROM alpine:latest
 
 # Install ca-certificates for HTTPS and tzdata for timezone support
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata \
+    && addgroup -S app && adduser -S -G app app
 
-WORKDIR /root/
+WORKDIR /app
 
 # Copy the binary from builder
 COPY --from=builder /app/server .
+
+USER app
 
 # Expose port
 EXPOSE 8080

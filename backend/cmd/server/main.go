@@ -20,6 +20,7 @@ import (
 	"github.com/toof-jp/shisha-log/backend/internal/telemetry"
 	"github.com/toof-jp/shisha-log/backend/internal/version"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"golang.org/x/time/rate"
 )
 
 const serviceName = "shisha-log-backend"
@@ -96,7 +97,7 @@ func main() {
 	sessionRepo := repository.NewSessionRepository(supabaseClient)
 
 	// Initialize handlers
-	authHandler := api.NewAuthHandler(userRepo, passwordService, jwtService)
+	authHandler := api.NewAuthHandler(userRepo, passwordService, jwtService, cfg.Environment == "production")
 	sessionHandler := api.NewSessionHandler(sessionRepo)
 
 	// Initialize auth middleware
@@ -109,6 +110,7 @@ func main() {
 	e.Use(otelecho.Middleware(serviceName))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.Secure())
 
 	// Configure CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -142,8 +144,16 @@ func main() {
 	// Swagger documentation
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// Auth routes (public)
+	// Auth routes (public), rate limited per IP to slow down credential
+	// brute force and reset token guessing
 	authGroup := apiGroup.Group("/auth")
+	authGroup.Use(middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+		Store: middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{
+			Rate:      rate.Limit(5),
+			Burst:     10,
+			ExpiresIn: 3 * time.Minute,
+		}),
+	}))
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/refresh", authHandler.Refresh)

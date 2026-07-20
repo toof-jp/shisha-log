@@ -17,17 +17,20 @@ type AuthHandler struct {
 	userRepo        *repository.UserRepository
 	passwordService *service.PasswordService
 	jwtService      *service.JWTService
+	secureCookies   bool
 }
 
 func NewAuthHandler(
 	userRepo *repository.UserRepository,
 	passwordService *service.PasswordService,
 	jwtService *service.JWTService,
+	secureCookies bool,
 ) *AuthHandler {
 	return &AuthHandler{
 		userRepo:        userRepo,
 		passwordService: passwordService,
 		jwtService:      jwtService,
+		secureCookies:   secureCookies,
 	}
 }
 
@@ -52,6 +55,10 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
+	if l := len(req.UserID); l < 3 || l > 30 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "user_id must be between 3 and 30 characters"})
+	}
+
 	// Validate password strength
 	if err := h.passwordService.ValidatePasswordStrength(req.Password); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -74,7 +81,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	if err != nil {
 		// Log the actual error for debugging
 		c.Logger().Errorf("Failed to create user: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user", "details": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
 	// Generate JWT token
@@ -102,7 +109,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	cookie.Expires = refreshExpiresAt
 	cookie.Path = "/"
 	cookie.HttpOnly = true
-	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.Secure = h.secureCookies || c.Request().TLS != nil
 	cookie.SameSite = http.SameSiteStrictMode
 	c.SetCookie(cookie)
 
@@ -133,6 +140,10 @@ func (h *AuthHandler) Login(c echo.Context) error {
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	if req.UserID == "" || req.Password == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "user_id and password are required"})
 	}
 
 	// Get user by user_id
@@ -174,7 +185,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	cookie.Expires = refreshExpiresAt
 	cookie.Path = "/"
 	cookie.HttpOnly = true
-	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.Secure = h.secureCookies || c.Request().TLS != nil
 	cookie.SameSite = http.SameSiteStrictMode
 	c.SetCookie(cookie)
 
@@ -191,7 +202,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param request body object{user_id=string} true "Password reset request" example({"user_id": "johndoe"})
-// @Success 200 {object} object{message=string,reset_token=string} "Reset token generated (token would be sent via secure channel in production)"
+// @Success 200 {object} object{message=string} "Reset token generated and delivered out of band"
 // @Failure 400 {object} object{error=string} "Invalid request body"
 // @Failure 500 {object} object{error=string} "Internal server error"
 // @Router /auth/request-password-reset [post]
@@ -202,6 +213,10 @@ func (h *AuthHandler) RequestPasswordReset(c echo.Context) error {
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	if req.UserID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "user_id is required"})
 	}
 
 	// Get user by user_id
@@ -223,10 +238,12 @@ func (h *AuthHandler) RequestPasswordReset(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create reset token"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":     "If the user ID exists, a reset token has been generated",
-		"reset_token": resetToken, // In production, this would be sent via secure channel
-	})
+	// The token is intentionally never returned in the response: it must be
+	// delivered out of band, otherwise anyone knowing a user_id could take
+	// over the account.
+	c.Logger().Infof("Password reset token generated for user %s", user.ID)
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "If the user ID exists, a reset token has been generated"})
 }
 
 // ResetPassword godoc
@@ -248,6 +265,10 @@ func (h *AuthHandler) ResetPassword(c echo.Context) error {
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	if req.Token == "" || req.NewPassword == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "token and new_password are required"})
 	}
 
 	// Validate password strength
@@ -310,6 +331,10 @@ func (h *AuthHandler) ChangePassword(c echo.Context) error {
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "current_password and new_password are required"})
 	}
 
 	// Validate new password strength
@@ -451,7 +476,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	cookie.Expires = time.Now().Add(-24 * time.Hour)
 	cookie.Path = "/"
 	cookie.HttpOnly = true
-	cookie.Secure = c.Request().TLS != nil // Only secure in HTTPS
+	cookie.Secure = h.secureCookies || c.Request().TLS != nil
 	cookie.SameSite = http.SameSiteStrictMode
 	c.SetCookie(cookie)
 

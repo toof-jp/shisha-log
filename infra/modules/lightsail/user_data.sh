@@ -241,15 +241,8 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        
-        # CORS headers
-        add_header Access-Control-Allow-Origin * always;
-        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
-        
-        if (\$request_method = 'OPTIONS') {
-            return 204;
-        }
+        # CORS (including OPTIONS preflight) is handled by the application,
+        # which enforces the configured origin allow-list.
     }
 
     location /health {

@@ -8,7 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/lib/pq v1.10.9
-	github.com/supabase-community/postgrest-go v0.0.11
+	github.com/supabase-community/postgrest-go v0.0.12
 	github.com/supabase-community/supabase-go v0.0.4
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.4
